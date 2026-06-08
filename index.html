@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MotoCRM — Sistema de Ventas</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f0e0b;--surface:#1a1915;--surface2:#222118;--surface3:#2a2820;
+  --border:#2e2c24;--accent:#f5c518;--accent2:#e8a000;
+  --text:#f0ead6;--muted:#7a7465;--danger:#ef4444;--success:#22c55e;--info:#3b82f6;
+}
+[data-theme="light"]{
+  --bg:#f5f3ee;--surface:#ffffff;--surface2:#f0ede6;--surface3:#e8e4db;
+  --border:#d4cfc4;--accent:#c9a000;--accent2:#b08a00;
+  --text:#1a1915;--muted:#7a7465;--danger:#dc2626;--success:#16a34a;--info:#2563eb;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;transition:background .2s,color .2s;}
+.hidden{display:none!important;}
+.theme-toggle{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 8px;cursor:pointer;font-size:16px;}
+
+/* ── AUTH ── */
+#auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:40px;width:360px;}
+.auth-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:30px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;}
+.auth-sub{font-size:10px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:28px;margin-top:3px;}
+.auth-tabs{display:flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:20px;}
+.auth-tab{flex:1;padding:9px;text-align:center;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);transition:all .15s;}
+.auth-tab.active{background:var(--accent);color:var(--bg);}
+.auth-error{background:#ef444422;border:1px solid #ef444444;color:#ef4444;border-radius:4px;padding:8px 12px;font-size:12px;margin-bottom:12px;}
+.auth-info{background:#3b82f622;border:1px solid #3b82f644;color:#3b82f6;border-radius:4px;padding:8px 12px;font-size:12px;margin-bottom:12px;}
+
+/* ── LAYOUT ── */
+#app{display:flex;min-height:100vh;}
+.sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;overflow-y:auto;}
+.sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid var(--border);}
+.logo-tag{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;line-height:1;}
+.logo-sub{font-size:10px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:3px;}
+.sidebar-nav{flex:1;padding:12px 0;}
+.nav-section{padding:10px 20px 4px;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:14px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);transition:all .15s;border-left:3px solid transparent;}
+.nav-item:hover{color:var(--text);background:var(--surface2);}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(245,197,24,.06);}
+.nav-icon{font-size:15px;width:20px;text-align:center;}
+.sidebar-footer{padding:14px 20px;border-top:1px solid var(--border);}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;color:var(--bg);flex-shrink:0;}
+.user-chip{display:flex;align-items:center;gap:10px;}
+.user-name{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.user-role{font-size:11px;color:var(--danger);cursor:pointer;}
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-width:0;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.page-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;letter-spacing:1px;text-transform:uppercase;}
+.page-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.topbar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+#content{padding:24px 28px;flex:1;}
+
+/* ── BUTTONS ── */
+.btn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:7px 14px;border-radius:4px;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-primary{background:var(--accent);color:var(--bg);}
+.btn-primary:hover:not(:disabled){background:var(--accent2);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);border-color:var(--muted);}
+.btn-danger{background:#ef444422;color:#ef4444;border:1px solid #ef444444;}
+.btn-sm{padding:4px 10px;font-size:11px;}
+
+/* ── FORMS ── */
+.form-row{margin-bottom:12px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-weight:600;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:8px 11px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;outline:none;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-select option{background:var(--surface2);}
+.form-textarea{resize:vertical;min-height:65px;}
+.search-input{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:7px 12px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;width:200px;outline:none;}
+.search-input:focus{border-color:var(--accent);}
+.search-input::placeholder{color:var(--muted);}
+
+/* ── TABLE ── */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.section-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:19px;letter-spacing:1px;text-transform:uppercase;}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:24px;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:600px;}
+th{background:var(--surface2);padding:10px 14px;text-align:left;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:rgba(245,197,24,.025);cursor:pointer;}
+
+/* ── BADGE ── */
+.badge{display:inline-block;padding:2px 9px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;}
+
+/* ── KPI ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent);}
+.kpi-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.kpi-value{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:38px;color:var(--text);line-height:1;}
+.kpi-delta{font-size:11px;color:var(--success);margin-top:5px;}
+.kpi-icon{position:absolute;right:14px;top:14px;font-size:26px;opacity:.12;}
+
+/* ── PIPELINE ── */
+.pipeline-board{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+.pipeline-col{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;min-height:380px;}
+.pipeline-col-header{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid;}
+.pipeline-total{font-size:11px;color:var(--muted);font-weight:400;letter-spacing:0;display:block;margin-top:2px;}
+.lead-card{background:var(--surface2);border-radius:6px;padding:11px;margin-bottom:8px;cursor:pointer;border:1px solid transparent;transition:transform .1s;}
+.lead-card:hover{transform:translateY(-1px);border-color:var(--border);}
+.lead-card-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;}
+.lead-card-moto{font-size:11px;color:var(--muted);margin-top:2px;}
+.lead-card-budget{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--accent);margin-top:7px;}
+
+/* ── PIPELINE MINI ── */
+.pipeline-mini{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px;}
+.stage-col{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;}
+.stage-header{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.stage-count{background:var(--surface2);border-radius:10px;padding:1px 7px;font-size:11px;color:var(--muted);}
+.mini-lead{background:var(--surface2);border-radius:4px;padding:6px 8px;margin-bottom:5px;font-size:12px;border-left:2px solid;}
+.mini-lead-name{font-weight:600;}
+.mini-lead-moto{color:var(--muted);font-size:11px;margin-top:1px;}
+
+/* ── INVENTORY ── */
+.inv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.inv-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;transition:border-color .15s;}
+.inv-card:hover{border-color:var(--accent);}
+.inv-moto{font-size:36px;margin-bottom:10px;}
+.inv-model{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:21px;line-height:1;}
+.inv-brand{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;margin-bottom:10px;}
+.inv-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.inv-chip{background:var(--surface2);border-radius:3px;padding:2px 7px;font-size:11px;color:var(--muted);}
+.inv-price{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:var(--accent);}
+.inv-footer{display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:26px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.modal-lg{max-width:660px;}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:1px;text-transform:uppercase;margin-bottom:18px;color:var(--accent);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);}
+
+/* ── QUOTE ── */
+.quote-result{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:14px;}
+.quote-big{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;color:var(--accent);}
+.quote-detail{font-size:12px;color:var(--muted);margin-top:3px;}
+.quote-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.quote-row:last-child{border-bottom:none;}
+.quote-row-label{color:var(--muted);}
+
+/* ── CALENDAR ── */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.cal-month{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:1px;text-transform:uppercase;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+.cal-day-name{text-align:center;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:4px 0;}
+.cal-day{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:7px 6px;min-height:66px;}
+.cal-day.today{border-color:var(--accent);}
+.cal-day.other-month{opacity:.3;}
+.cal-day-num{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;margin-bottom:3px;}
+.cal-event{font-size:10px;border-radius:2px;padding:1px 4px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}
+.cal-event.confirmada{background:#22c55e;color:#fff;}
+.cal-event.pendiente{background:#f59e0b;color:#000;}
+.cal-event.cancelada{background:#ef4444;color:#fff;}
+
+/* ── ACTIVITY ── */
+.activity-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.activity-item:last-child{border-bottom:none;}
+.activity-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);margin-top:5px;flex-shrink:0;}
+.activity-time{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* ── MISC ── */
+.loading{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--muted);}
+.spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:12px;}
+.empty{text-align:center;padding:36px;color:var(--muted);font-size:13px;}
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:20px;}
+.detail-panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;}
+.detail-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.toast{position:fixed;bottom:24px;right:24px;padding:10px 18px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;z-index:999;animation:fadeIn .2s ease;color:#fff;}
+.toast.success{background:#22c55e;}
+.toast.danger{background:#ef4444;}
+.toast.info{background:#3b82f6;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeIn .2s ease;}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">MotoCRM</div>
+    <div class="auth-sub">Sistema de Ventas</div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Iniciar Sesión</div>
+      <div class="auth-tab" id="tab-register" onclick="switchTab('register')">Registrarse</div>
+    </div>
+    <div id="auth-msg" class="hidden"></div>
+    <div id="auth-name-row" class="form-row hidden">
+      <label class="form-label">Nombre completo</label>
+      <input class="form-input" id="auth-name" placeholder="Esteban Reyes" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Email</label>
+      <input class="form-input" id="auth-email" type="email" placeholder="vendedor@agencia.com" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Contraseña</label>
+      <input class="form-input" id="auth-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSubmit()" />
+    </div>
+    <button class="btn btn-primary" id="auth-btn" style="width:100%;padding:12px;margin-top:8px;" onclick="authSubmit()">Entrar</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="hidden">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-tag">MotoCRM</div>
+      <div class="logo-sub">Sistema de Ventas</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Módulos</div>
+      <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')"><span class="nav-icon">◈</span>Dashboard</div>
+      <div class="nav-item" data-page="pipeline" onclick="navigate('pipeline')"><span class="nav-icon">⬡</span>Pipeline</div>
+      <div class="nav-item" data-page="leads" onclick="navigate('leads')"><span class="nav-icon">◉</span>Prospectos</div>
+      <div class="nav-item" data-page="quotes" onclick="navigate('quotes')"><span class="nav-icon">◻</span>Cotizaciones</div>
+      <div class="nav-item" data-page="agenda" onclick="navigate('agenda')"><span class="nav-icon">◷</span>Agenda</div>
+      <div class="nav-item" data-page="inventory" onclick="navigate('inventory')"><span class="nav-icon">⬢</span>Inventario</div>
+      <div class="nav-item" data-page="clients" onclick="navigate('clients')"><span class="nav-icon">◎</span>Clientes</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar" id="user-avatar">ER</div>
+        <div style="flex:1;min-width:0;">
+          <div class="user-name" id="user-name">—</div>
+          <div class="user-role" onclick="logout()">Cerrar sesión</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="topbar-title">Dashboard</div>
+        <div class="page-sub" id="topbar-sub">Resumen general</div>
+      </div>
+      <div class="topbar-actions" id="topbar-actions"></div>
+      <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙</button>
+    </div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<!-- MODAL CONTAINER -->
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const newTheme = html.getAttribute('data-theme') === 'light' ? null : 'light';
+  if(newTheme) html.setAttribute('data-theme', 'light');
+  else html.removeAttribute('data-theme');
+  document.getElementById('theme-btn').textContent = newTheme ? '☀️' : '🌙';
+  localStorage.setItem('motocrm-theme', newTheme || 'dark');
+}
+const _savedTheme = localStorage.getItem('motocrm-theme');
+if(_savedTheme === 'light') { document.documentElement.setAttribute('data-theme','light'); }
+const SUPABASE_URL = 'https://howmnrsajhfxmcafvipu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhvd21ucnNhamhmeG1jYWZ2aXB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDY1OTksImV4cCI6MjA5NjUyMjU5OX0.4Z523iH-Yj6_CthwKeljlPLDBIrVwkk72yTDqJYwEXg';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let STATE = { page: 'dashboard', user: null, leads: [], inventory: [], clients: [], quotes: [], appts: [], search: '' };
+const STAGES = ['Nuevo','Contactado','Interesado','Prueba','Cerrado'];
+const STAGE_COLOR = {Nuevo:'#64748b',Contactado:'#3b82f6',Interesado:'#f59e0b',Prueba:'#a855f7',Cerrado:'#22c55e'};
+const INV_COLOR = {Disponible:'#22c55e',Apartada:'#f59e0b',Vendida:'#ef4444'};
+const QUOTE_COLOR = {Borrador:'#64748b',Enviada:'#3b82f6',Aceptada:'#22c55e',Rechazada:'#ef4444'};
+const fmtMXN = n => '$' + Number(n||0).toLocaleString('es-MX') + ' MXN';
+const calcMens = (p,e,pl,t) => { const c=p-e, r=t/100/12; return r===0?c/pl:(c*r*Math.pow(1+r,pl))/(Math.pow(1+r,pl)-1); };
+const today = () => new Date().toISOString().slice(0,10);
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-root').appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+let authMode = 'login';
+function switchTab(mode) {
+  authMode = mode;
+  document.getElementById('tab-login').classList.toggle('active', mode==='login');
+  document.getElementById('tab-register').classList.toggle('active', mode==='register');
+  document.getElementById('auth-name-row').classList.toggle('hidden', mode==='login');
+  document.getElementById('auth-btn').textContent = mode==='login' ? 'Entrar' : 'Crear Cuenta';
+  document.getElementById('auth-msg').classList.add('hidden');
+}
+function setAuthMsg(msg, type='error') {
+  const el = document.getElementById('auth-msg');
+  el.className = type==='error' ? 'auth-error' : 'auth-info';
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+async function authSubmit() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-pass').value;
+  const name = document.getElementById('auth-name').value.trim();
+  if (!email || !pass) return setAuthMsg('Completa email y contraseña');
+  document.getElementById('auth-btn').textContent = 'Cargando…';
+  document.getElementById('auth-btn').disabled = true;
+  if (authMode === 'login') {
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) { setAuthMsg(error.message); }
+  } else {
+    if (!name) { setAuthMsg('Ingresa tu nombre'); document.getElementById('auth-btn').disabled=false; document.getElementById('auth-btn').textContent='Crear Cuenta'; return; }
+    const { error } = await sb.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
+    if (error) setAuthMsg(error.message);
+    else setAuthMsg('✓ Revisa tu email para confirmar tu cuenta', 'info');
+  }
+  document.getElementById('auth-btn').disabled = false;
+  document.getElementById('auth-btn').textContent = authMode==='login' ? 'Entrar' : 'Crear Cuenta';
+}
+async function logout() {
+  await sb.auth.signOut();
+}
+
+// ── SESSION LISTENER ──────────────────────────────────────────────────────────
+sb.auth.onAuthStateChange(async (_e, session) => {
+  if (session) {
+    STATE.user = session.user;
+    const name = session.user.user_metadata?.full_name || session.user.email || 'Usuario';
+    const initials = name.slice(0,2).toUpperCase();
+    document.getElementById('user-name').textContent = name;
+    document.getElementById('user-avatar').textContent = initials;
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    await loadAll();
+    navigate('dashboard');
+  } else {
+    STATE.user = null;
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('app').classList.add('hidden');
+  }
+});
+
+// ── DATA LOAD ─────────────────────────────────────────────────────────────────
+async function loadAll() {
+  const [l,inv,c,q,a] = await Promise.all([
+    sb.from('leads').select('*').order('created_at',{ascending:false}),
+    sb.from('inventory').select('*').order('created_at',{ascending:false}),
+    sb.from('clients').select('*').order('created_at',{ascending:false}),
+    sb.from('quotes').select('*').order('created_at',{ascending:false}),
+    sb.from('appointments').select('*').order('date',{ascending:true}),
+  ]);
+  if(l.data) STATE.leads = l.data;
+  if(inv.data) STATE.inventory = inv.data;
+  if(c.data) STATE.clients = c.data;
+  if(q.data) STATE.quotes = q.data;
+  if(a.data) STATE.appts = a.data;
+}
+
+// ── REALTIME ──────────────────────────────────────────────────────────────────
+['leads','inventory','clients','quotes','appointments'].forEach(t => {
+  sb.channel('rt_'+t).on('postgres_changes',{event:'*',schema:'public',table:t}, async () => {
+    await loadAll(); renderPage();
+  }).subscribe();
+});
+
+// ── NAVIGATION ───────────────────────────────────────────────────────────────
+const PAGE_META = {
+  dashboard: ['Dashboard','Resumen general'],
+  pipeline:  ['Pipeline','Proceso de ventas'],
+  leads:     ['Prospectos','Gestión de leads'],
+  quotes:    ['Cotizaciones','Financiamiento'],
+  agenda:    ['Agenda','Citas y pruebas de manejo'],
+  inventory: ['Inventario','Catálogo de motos'],
+  clients:   ['Clientes','Base de clientes'],
+};
+function navigate(page) {
+  STATE.page = page; STATE.search = '';
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.page === page));
+  const [t,s] = PAGE_META[page] || ['—',''];
+  document.getElementById('topbar-title').textContent = t;
+  document.getElementById('topbar-sub').textContent = s;
+  renderTopbarActions();
+  renderPage();
+}
+function renderTopbarActions() {
+  const p = STATE.page;
+  let html = '';
+  if (p==='leads'||p==='pipeline') html = `<input class="search-input" id="search-box" placeholder="Buscar…" value="${esc(STATE.search)}" oninput="STATE.search=this.value;renderPage()" /><button class="btn btn-ghost" onclick="exportExcel('leads')">↓ Excel</button><button class="btn btn-primary" onclick="openModal('lead')">+ Prospecto</button>`;
+  if (p==='inventory') html = `<button class="btn btn-ghost" onclick="exportExcel('inventory')">↓ Excel</button><button class="btn btn-primary" onclick="openModal('moto')">+ Moto</button>`;
+  if (p==='clients') html = `<button class="btn btn-ghost" onclick="exportExcel('clients')">↓ Excel</button>`;
+  if (p==='quotes') html = `<button class="btn btn-ghost" onclick="exportExcel('quotes')">↓ Excel</button><button class="btn btn-primary" onclick="openModal('quote')">+ Cotización</button>`;
+  if (p==='agenda') html = `<button class="btn btn-ghost btn-toggle-cal" onclick="toggleCalView()">Vista Calendario</button><button class="btn btn-primary" onclick="openModal('appt')">+ Cita</button>`;
+  if (p==='dashboard') html = `<button class="btn btn-ghost" onclick="exportExcel('all')">↓ Exportar Todo</button>`;
+  document.getElementById('topbar-actions').innerHTML = html;
+}
+
+// ── PAGE RENDERER ─────────────────────────────────────────────────────────────
+function renderPage() {
+  const c = document.getElementById('content');
+  c.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'fade-in';
+  switch(STATE.page) {
+    case 'dashboard': div.innerHTML = renderDashboard(); break;
+    case 'pipeline':  div.innerHTML = renderPipeline(); break;
+    case 'leads':     div.innerHTML = renderLeads(); break;
+    case 'quotes':    div.innerHTML = renderQuotes(); break;
+    case 'agenda':    div.innerHTML = renderAgenda(); break;
+    case 'inventory': div.innerHTML = renderInventory(); break;
+    case 'clients':   div.innerHTML = renderClients(); break;
+  }
+  c.appendChild(div);
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const {leads,inventory,quotes,appts} = STATE;
+  const cerrados = leads.filter(l=>l.status==='Cerrado');
+  const totalV = cerrados.reduce((a,l)=>a+Number(l.budget||0),0);
+  const disp = inventory.filter(i=>i.status==='Disponible').length;
+  const kpis = [
+    {label:'Leads Totales',value:leads.length,delta:`${leads.filter(l=>l.status==='Nuevo').length} nuevos`,icon:'◉'},
+    {label:'En Pipeline',value:leads.filter(l=>l.status!=='Cerrado').length,delta:'activos',icon:'⬡'},
+    {label:'Ventas Cerradas',value:cerrados.length,delta:fmtMXN(totalV),icon:'✓'},
+    {label:'Motos Disponibles',value:disp,delta:`de ${inventory.length} en stock`,icon:'🏍'},
+  ];
+  let html = `<div class="kpi-row">${kpis.map(k=>`
+    <div class="kpi-card"><div class="kpi-icon">${k.icon}</div>
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-value">${k.value}</div>
+    <div class="kpi-delta">${k.delta}</div></div>`).join('')}</div>`;
+  // Pipeline mini
+  html += `<div class="section-header"><div class="section-title">Pipeline de Ventas</div><button class="btn btn-ghost btn-sm" onclick="navigate('pipeline')">Ver completo →</button></div>`;
+  html += `<div class="pipeline-mini">${STAGES.map(st=>{
+    const sl=leads.filter(l=>l.status===st);
+    return `<div class="stage-col"><div class="stage-header" style="color:${STAGE_COLOR[st]}">${st}<span class="stage-count">${sl.length}</span></div>${sl.slice(0,3).map(l=>`<div class="mini-lead" style="border-left-color:${STAGE_COLOR[st]}"><div class="mini-lead-name">${esc(l.name?.split(' ')[0])}</div><div class="mini-lead-moto">${esc(l.moto)}</div></div>`).join('')}</div>`;
+  }).join('')}</div>`;
+  // Bottom row
+  html += `<div style="display:grid;grid-template-columns:1fr 1fr 300px;gap:18px;">`;
+  // Quotes
+  html += `<div><div class="section-header"><div class="section-title">Cotizaciones</div><button class="btn btn-ghost btn-sm" onclick="navigate('quotes')">Ver →</button></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Moto</th><th>Estado</th></tr></thead><tbody>${quotes.length===0?`<tr><td colspan="3"><div class="empty">Sin cotizaciones</div></td></tr>`:quotes.slice(0,4).map(q=>`<tr><td style="font-weight:600">${esc(q.lead_name)}</td><td style="color:var(--muted);font-size:12px">${esc(q.moto)}</td><td>${quoteBadge(q.status)}</td></tr>`).join('')}</tbody></table></div></div>`;
+  // Appts
+  html += `<div><div class="section-header"><div class="section-title">Próximas Citas</div><button class="btn btn-ghost btn-sm" onclick="navigate('agenda')">Ver →</button></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Tipo</th><th>Fecha</th></tr></thead><tbody>${appts.length===0?`<tr><td colspan="3"><div class="empty">Sin citas</div></td></tr>`:appts.slice(0,4).map(a=>`<tr><td style="font-weight:600">${esc(a.lead_name)}</td><td style="font-size:12px;color:var(--muted)">${esc(a.type)}</td><td style="font-size:12px">${esc(a.date)}</td></tr>`).join('')}</tbody></table></div></div>`;
+  // Activity
+  const recentLeads = STATE.leads.slice(0,5);
+  html += `<div><div class="section-header"><div class="section-title">Últimos Prospectos</div><button class="btn btn-ghost btn-sm" onclick="navigate('leads')">Ver →</button></div><div class="table-wrap" style="padding:2px 14px">${recentLeads.length===0?`<div class="empty">Sin prospectos aún</div>`:recentLeads.map(l=>`<div class="activity-item"><div class="activity-dot" style="background:${STAGE_COLOR[l.status]||'var(--accent)'}"></div><div><div style="font-size:13px;font-weight:600">${esc(l.name)}</div><div class="activity-time">${esc(l.moto)} · ${stageBadge(l.status)}</div></div></div>`).join('')}</div></div>`;
+  html += `</div>`;
+  return html;
+}
+
+// ── PIPELINE ──────────────────────────────────────────────────────────────────
+function renderPipeline() {
+  const leads = STATE.leads.filter(l => l.name?.toLowerCase().includes(STATE.search.toLowerCase()) || l.moto?.toLowerCase().includes(STATE.search.toLowerCase()));
+  return `<div class="pipeline-board">${STAGES.map(st=>{
+    const sl=leads.filter(l=>l.status===st);
+    const tot=sl.reduce((a,l)=>a+Number(l.budget||0),0);
+    return `<div class="pipeline-col">
+      <div class="pipeline-col-header" style="border-bottom-color:${STAGE_COLOR[st]};color:${STAGE_COLOR[st]}">${st}<span class="pipeline-total">${sl.length} leads · ${fmtMXN(tot)}</span></div>
+      ${sl.length===0?`<div style="color:var(--muted);font-size:12px;text-align:center;margin-top:20px">Sin leads</div>`:sl.map(l=>`<div class="lead-card" onclick="openLeadDetail('${l.id}')"><div class="lead-card-name">${esc(l.name)}</div><div class="lead-card-moto">${esc(l.moto)}</div><div class="lead-card-budget">${fmtMXN(l.budget)}</div><div style="font-size:11px;color:var(--muted);margin-top:5px">${esc(l.date||'')}</div></div>`).join('')}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ── LEADS ─────────────────────────────────────────────────────────────────────
+function renderLeads() {
+  const leads = STATE.leads.filter(l => l.name?.toLowerCase().includes(STATE.search.toLowerCase()) || l.moto?.toLowerCase().includes(STATE.search.toLowerCase()));
+  return `<div class="table-wrap"><table><thead><tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Moto</th><th>Presupuesto</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${leads.length===0?`<tr><td colspan="7"><div class="empty">Sin prospectos. ¡Agrega el primero!</div></td></tr>`:leads.map((l,i)=>`<tr onclick="openLeadDetail('${l.id}')"><td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td><td style="font-weight:600">${esc(l.name)}</td><td style="color:var(--muted)">${esc(l.phone)}</td><td>${esc(l.moto)}</td><td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--accent)">${fmtMXN(l.budget)}</td><td>${stageBadge(l.status)}</td><td style="color:var(--muted)">${esc(l.date||'')}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+// ── INVENTORY ─────────────────────────────────────────────────────────────────
+function renderInventory() {
+  const {inventory} = STATE;
+  if (!inventory.length) return `<div class="empty">Sin motos en inventario. ¡Agrega la primera!</div>`;
+  return `<div class="inv-grid">${inventory.map(m=>`
+    <div class="inv-card">
+      <div class="inv-moto">🏍️</div>
+      <div class="inv-model">${esc(m.model)}</div>
+      <div class="inv-brand">${esc(m.brand)} · ${esc(m.year)}</div>
+      <div class="inv-meta"><span class="inv-chip">${esc(m.color)}</span><span class="inv-chip">${Number(m.km)===0?'0 km':esc(m.km)+' km'}</span></div>
+      <div class="inv-footer">
+        <div class="inv-price">${fmtMXN(m.price)}</div>
+        <select class="form-select" style="width:auto;padding:4px 8px;font-size:12px" onchange="updateMotoStatus('${m.id}',this.value)">
+          ${['Disponible','Apartada','Vendida'].map(s=>`<option${m.status===s?' selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div style="margin-top:10px"><span class="badge" style="background:${INV_COLOR[m.status]||'#64748b'}22;color:${INV_COLOR[m.status]||'#64748b'};border:1px solid ${INV_COLOR[m.status]||'#64748b'}44">${esc(m.status)}</span></div>
+    </div>`).join('')}</div>`;
+}
+
+// ── CLIENTS ───────────────────────────────────────────────────────────────────
+function renderClients() {
+  const {clients} = STATE;
+  return `<div class="table-wrap"><table><thead><tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Moto</th><th>Fecha</th><th>Total</th></tr></thead><tbody>${clients.length===0?`<tr><td colspan="7"><div class="empty">Sin clientes aún</div></td></tr>`:clients.map((c,i)=>`<tr><td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td><td style="font-weight:600">${esc(c.name)}</td><td style="color:var(--muted)">${esc(c.phone)}</td><td style="color:var(--muted)">${esc(c.email)}</td><td>${esc(c.moto)}</td><td style="color:var(--muted)">${esc(c.date||'')}</td><td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--accent)">${fmtMXN(c.total)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+// ── QUOTES ────────────────────────────────────────────────────────────────────
+let selectedQuoteId = null;
+function renderQuotes() {
+  const {quotes} = STATE;
+  const sel = selectedQuoteId ? quotes.find(q=>q.id===selectedQuoteId) : null;
+  let html = `<div class="${sel?'two-col':''}">`;
+  html += `<div class="table-wrap"><table><thead><tr><th>#</th><th>Cliente</th><th>Moto</th><th>Precio</th><th>Enganche</th><th>Plazo</th><th>Mensualidad</th><th>Estado</th></tr></thead><tbody>`;
+  if (!quotes.length) html += `<tr><td colspan="8"><div class="empty">Sin cotizaciones</div></td></tr>`;
+  quotes.forEach((q,i) => {
+    const mens = calcMens(q.price,q.enganche,q.plazo,q.tasa);
+    html += `<tr onclick="selectQuote('${q.id}')"><td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td><td style="font-weight:600">${esc(q.lead_name)}</td><td>${esc(q.moto)}</td><td style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700">${fmtMXN(q.price)}</td><td style="color:var(--muted)">${fmtMXN(q.enganche)}</td><td style="color:var(--muted)">${q.plazo} meses</td><td style="font-weight:600">${fmtMXN(Math.round(mens))}</td><td>${quoteBadge(q.status)}</td></tr>`;
+  });
+  html += `</tbody></table></div>`;
+  if (sel) {
+    const mens = calcMens(sel.price,sel.enganche,sel.plazo,sel.tasa);
+    const total = sel.enganche + mens*sel.plazo;
+    html += `<div class="detail-panel">
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+        <div class="detail-title">Detalle</div>
+        <button class="btn btn-ghost btn-sm" onclick="selectedQuoteId=null;renderPage()">✕</button>
+      </div>
+      <div style="font-weight:600;margin-bottom:4px">${esc(sel.lead_name)}</div>
+      <div style="color:var(--muted);font-size:12px;margin-bottom:14px">${esc(sel.moto)} · ${esc(sel.date||'')}</div>
+      <div class="quote-result">
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Pago Mensual</div>
+        <div class="quote-big">${fmtMXN(Math.round(mens))}</div>
+        <div class="quote-detail">${sel.plazo} meses · Tasa ${sel.tasa}%</div>
+      </div>
+      ${[['Precio',fmtMXN(sel.price)],['Enganche',fmtMXN(sel.enganche)],['Financiar',fmtMXN(sel.price-sel.enganche)],['Total a pagar',fmtMXN(Math.round(total))]].map(([l,v])=>`<div class="quote-row"><span class="quote-row-label">${l}</span><span style="font-weight:600">${v}</span></div>`).join('')}
+      <div style="margin-top:14px">
+        <div class="form-label">Estado</div>
+        <select class="form-select" onchange="updateQuoteStatus('${sel.id}',this.value)">
+          ${['Borrador','Enviada','Aceptada','Rechazada'].map(s=>`<option${sel.status===s?' selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+function selectQuote(id) { selectedQuoteId = id; renderPage(); }
+
+// ── AGENDA ────────────────────────────────────────────────────────────────────
+let calView = false;
+let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
+function toggleCalView() { calView=!calView; renderPage(); renderTopbarActions(); const b=document.querySelector('.btn-toggle-cal'); if(b) b.textContent=calView?'Vista Lista':'Vista Calendario'; }
+function renderAgenda() {
+  const {appts} = STATE;
+  if (!calView) {
+    return `<div class="table-wrap"><table><thead><tr><th>#</th><th>Cliente</th><th>Tipo</th><th>Moto</th><th>Fecha</th><th>Hora</th><th>Notas</th><th>Estado</th></tr></thead><tbody>${appts.length===0?`<tr><td colspan="8"><div class="empty">Sin citas agendadas</div></td></tr>`:appts.map((a,i)=>`<tr><td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td><td style="font-weight:600">${esc(a.lead_name)}</td><td>${esc(a.type)}</td><td style="color:var(--muted)">${esc(a.moto||'—')}</td><td style="color:${a.date===today()?'var(--accent)':''}">${esc(a.date||'')}</td><td>${esc(a.time||'')}</td><td style="color:var(--muted);font-size:12px">${esc(a.notes||'—')}</td><td><select class="form-select" style="padding:3px 8px;font-size:12px;width:auto" onchange="updateApptStatus('${a.id}',this.value)">${['Pendiente','Confirmada','Cancelada'].map(s=>`<option${a.status===s?' selected':''}>${s}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`;
+  }
+  // Calendar
+  const MONTHS=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const DAYS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const totalDays=new Date(calYear,calMonth+1,0).getDate();
+  let days=[];
+  for(let i=0;i<firstDay;i++) days.push({d:new Date(calYear,calMonth,-firstDay+i+1),cur:false});
+  for(let i=1;i<=totalDays;i++) days.push({d:new Date(calYear,calMonth,i),cur:true});
+  while(days.length%7!==0){const last=days[days.length-1].d;days.push({d:new Date(last.getFullYear(),last.getMonth(),last.getDate()+1),cur:false});}
+  const todayStr=today();
+  let html=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px">`;
+  html+=`<div class="cal-header"><button class="btn btn-ghost btn-sm" onclick="calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderPage()">‹</button><div class="cal-month">${MONTHS[calMonth]} ${calYear}</div><button class="btn btn-ghost btn-sm" onclick="calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderPage()">›</button></div>`;
+  html+=`<div class="cal-grid">${DAYS.map(d=>`<div class="cal-day-name">${d}</div>`).join('')}${days.map(({d,cur})=>{const ds=d.toISOString().slice(0,10);const da=appts.filter(a=>a.date===ds);return `<div class="cal-day${!cur?' other-month':''}${ds===todayStr?' today':''}"><div class="cal-day-num">${d.getDate()}</div>${da.map(a=>`<div class="cal-event ${(a.status||'').toLowerCase()}" title="${esc(a.lead_name)}">${esc(a.time||'')} ${esc(a.lead_name?.split(' ')[0]||'')}</div>`).join('')}</div>`;}).join('')}</div>`;
+  html+=`</div>`;
+  return html;
+}
+
+// ── CRUD OPS ──────────────────────────────────────────────────────────────────
+async function updateMotoStatus(id, status) {
+  await sb.from('inventory').update({status}).eq('id',id);
+  const m = STATE.inventory.find(m=>m.id===id);
+  if(m) m.status=status;
+  toast('Estado actualizado');
+}
+async function updateQuoteStatus(id, status) {
+  await sb.from('quotes').update({status}).eq('id',id);
+  const q=STATE.quotes.find(q=>q.id===id);
+  if(q){q.status=status;}
+  renderPage();
+}
+async function updateApptStatus(id, status) {
+  await sb.from('appointments').update({status}).eq('id',id);
+  const a=STATE.appts.find(a=>a.id===id);
+  if(a) a.status=status;
+}
+async function updateLeadStatus(id, status) {
+  await sb.from('leads').update({status}).eq('id',id);
+  const l=STATE.leads.find(l=>l.id===id);
+  if(l) l.status=status;
+  toast('Etapa actualizada');
+}
+async function deleteLead(id) {
+  if(!confirm('¿Eliminar este prospecto?')) return;
+  await sb.from('leads').delete().eq('id',id);
+  STATE.leads = STATE.leads.filter(l=>l.id!==id);
+  closeModal(); toast('Prospecto eliminado','danger');
+  renderPage();
+}
+
+// ── LEAD DETAIL ───────────────────────────────────────────────────────────────
+function openLeadDetail(id) {
+  const l = STATE.leads.find(l=>l.id===id);
+  if(!l) return;
+  const html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-title">${esc(l.name)}</div>
+      <div class="form-grid" style="margin-bottom:14px">
+        ${[['Teléfono',l.phone],['Moto',l.moto],['Presupuesto',fmtMXN(l.budget)],['Fecha',l.date||'']].map(([lb,v])=>`<div><div class="form-label">${lb}</div><div style="font-weight:600">${esc(v)}</div></div>`).join('')}
+      </div>
+      <div style="margin-bottom:14px"><div class="form-label">Notas</div><div style="font-size:13px;color:var(--muted);background:var(--surface2);padding:9px 11px;border-radius:4px">${esc(l.notes||'Sin notas')}</div></div>
+      <div class="form-row"><label class="form-label">Cambiar etapa</label>
+        <select class="form-select" onchange="updateLeadStatus('${l.id}',this.value)">
+          ${STAGES.map(s=>`<option${l.status===s?' selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div style="margin-top:8px">${stageBadge(l.status)}</div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" onclick="deleteLead('${l.id}')">Eliminar</button>
+        <button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('modal-root').innerHTML = html;
+}
+
+// ── MODAL OPEN ────────────────────────────────────────────────────────────────
+function openModal(type) {
+  const leadOptions = STATE.leads.map(l=>`<option>${esc(l.name)}</option>`).join('');
+  const motoOptions = STATE.inventory.map(m=>`<option value="${esc(m.brand+' '+m.model)}" data-price="${m.price}">${esc(m.brand)} ${esc(m.model)}</option>`).join('');
+  let html = '';
+  if (type==='lead') {
+    html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+      <div class="modal-title">Nuevo Prospecto</div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Nombre</label><input class="form-input" id="f-name" placeholder="Carlos Mendoza"/></div>
+        <div class="form-row"><label class="form-label">Teléfono</label><input class="form-input" id="f-phone" placeholder="442-XXX-XXXX"/></div>
+        <div class="form-row"><label class="form-label">Moto de interés</label><input class="form-input" id="f-moto" placeholder="Honda CB500F"/></div>
+        <div class="form-row"><label class="form-label">Presupuesto MXN</label><input class="form-input" id="f-budget" type="number" placeholder="85000"/></div>
+      </div>
+      <div class="form-row"><label class="form-label">Etapa</label><select class="form-select" id="f-status">${STAGES.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div class="form-row"><label class="form-label">Notas</label><textarea class="form-textarea" id="f-notes" placeholder="Observaciones…"></textarea></div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveLead()">Guardar</button></div>
+    </div></div>`;
+  }
+  if (type==='moto') {
+    html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+      <div class="modal-title">Agregar Moto</div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Marca</label><input class="form-input" id="f-brand" placeholder="Honda"/></div>
+        <div class="form-row"><label class="form-label">Modelo</label><input class="form-input" id="f-model" placeholder="CB500F"/></div>
+        <div class="form-row"><label class="form-label">Año</label><input class="form-input" id="f-year" type="number" value="2025"/></div>
+        <div class="form-row"><label class="form-label">Precio MXN</label><input class="form-input" id="f-price" type="number" placeholder="85000"/></div>
+        <div class="form-row"><label class="form-label">Color</label><input class="form-input" id="f-color" placeholder="Rojo"/></div>
+        <div class="form-row"><label class="form-label">Kilómetros</label><input class="form-input" id="f-km" type="number" value="0"/></div>
+      </div>
+      <div class="form-row"><label class="form-label">Estado</label><select class="form-select" id="f-inv-status">${['Disponible','Apartada','Vendida'].map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveMoto()">Guardar</button></div>
+    </div></div>`;
+  }
+  if (type==='quote') {
+    html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal modal-lg">
+      <div class="modal-title">Nueva Cotización</div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Cliente</label><select class="form-select" id="f-qlead"><option value="">Seleccionar…</option>${leadOptions}</select></div>
+        <div class="form-row"><label class="form-label">Moto</label><select class="form-select" id="f-qmoto" onchange="autoFillPrice(this)">${'<option value="">Seleccionar…</option>'+motoOptions}</select></div>
+        <div class="form-row"><label class="form-label">Precio MXN</label><input class="form-input" id="f-qprice" type="number"/></div>
+        <div class="form-row"><label class="form-label">Enganche MXN</label><input class="form-input" id="f-qenganche" type="number" placeholder="20000" oninput="previewMens()"/></div>
+        <div class="form-row"><label class="form-label">Plazo</label><select class="form-select" id="f-qplazo" onchange="previewMens()">${[12,18,24,36,48].map(p=>`<option${p===24?' selected':''}>${p}</option>`).join('')}</select></div>
+        <div class="form-row"><label class="form-label">Tasa Anual %</label><input class="form-input" id="f-qtasa" type="number" value="18" oninput="previewMens()"/></div>
+      </div>
+      <div id="mens-preview"></div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveQuote()">Guardar</button></div>
+    </div></div>`;
+  }
+  if (type==='appt') {
+    html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+      <div class="modal-title">Agendar Cita</div>
+      <div class="form-row"><label class="form-label">Cliente</label><select class="form-select" id="f-alead"><option value="">Seleccionar…</option>${leadOptions}</select></div>
+      <div class="form-row"><label class="form-label">Tipo</label><select class="form-select" id="f-atype">${['Prueba de manejo','Visita agencia','Entrega de moto','Seguimiento','Otro'].map(t=>`<option>${t}</option>`).join('')}</select></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Fecha</label><input class="form-input" id="f-adate" type="date"/></div>
+        <div class="form-row"><label class="form-label">Hora</label><input class="form-input" id="f-atime" type="time" value="10:00"/></div>
+      </div>
+      <div class="form-row"><label class="form-label">Moto (opcional)</label><select class="form-select" id="f-amoto"><option value="">—</option>${motoOptions}</select></div>
+      <div class="form-row"><label class="form-label">Notas</label><textarea class="form-textarea" id="f-anotes" placeholder="Instrucciones…"></textarea></div>
+      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveAppt()">Agendar</button></div>
+    </div></div>`;
+  }
+  document.getElementById('modal-root').innerHTML = html;
+}
+function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
+function autoFillPrice(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const p = opt.dataset.price;
+  if(p) { document.getElementById('f-qprice').value=p; previewMens(); }
+}
+function previewMens() {
+  const p=Number(document.getElementById('f-qprice')?.value||0);
+  const e=Number(document.getElementById('f-qenganche')?.value||0);
+  const pl=Number(document.getElementById('f-qplazo')?.value||24);
+  const t=Number(document.getElementById('f-qtasa')?.value||18);
+  if(!p||!e) return;
+  const mens=calcMens(p,e,pl,t);
+  document.getElementById('mens-preview').innerHTML=`<div class="quote-result"><div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Pago Mensual Estimado</div><div class="quote-big">${fmtMXN(Math.round(mens))}</div><div class="quote-detail">${pl} meses · Financiando ${fmtMXN(p-e)}</div></div>`;
+}
+
+// ── SAVE OPERATIONS ───────────────────────────────────────────────────────────
+async function saveLead() {
+  const name=document.getElementById('f-name').value.trim();
+  const phone=document.getElementById('f-phone').value.trim();
+  const moto=document.getElementById('f-moto').value.trim();
+  const budget=document.getElementById('f-budget').value;
+  const status=document.getElementById('f-status').value;
+  const notes=document.getElementById('f-notes').value.trim();
+  if(!name||!phone||!moto||!budget){toast("Completa todos los campos","danger");return;}
+  const {error} = await sb.from("leads").insert([{name,phone,moto,budget:Number(budget),status,notes,date:today()}]);
+  if(error){toast("Error: "+error.message,"danger");console.error(error);return;}
+  closeModal(); toast('Prospecto agregado');
+  await loadAll(); renderPage();
+}
+async function saveMoto() {
+  const brand=document.getElementById('f-brand').value.trim();
+  const model=document.getElementById('f-model').value.trim();
+  const year=document.getElementById('f-year').value;
+  const price=document.getElementById('f-price').value;
+  const color=document.getElementById('f-color').value.trim();
+  const km=document.getElementById('f-km').value;
+  const status=document.getElementById('f-inv-status').value;
+  if(!brand||!model||!price){toast('Completa los campos requeridos','danger');return;}
+  const {error}=await sb.from('inventory').insert([{brand,model,year:Number(year),price:Number(price),color,km:Number(km),status}]);
+  if(error){toast('Error al guardar','danger');return;}
+  closeModal(); toast('Moto agregada');
+  await loadAll(); renderPage();
+}
+async function saveQuote() {
+  const lead_name=document.getElementById('f-qlead').value;
+  const moto=document.getElementById('f-qmoto').value;
+  const price=document.getElementById('f-qprice').value;
+  const enganche=document.getElementById('f-qenganche').value;
+  const plazo=document.getElementById('f-qplazo').value;
+  const tasa=document.getElementById('f-qtasa').value;
+  if(!lead_name||!moto||!price||!enganche){toast('Completa los campos requeridos','danger');return;}
+  const {error}=await sb.from('quotes').insert([{lead_name,moto,price:Number(price),enganche:Number(enganche),plazo:Number(plazo),tasa:Number(tasa),status:'Borrador',date:today()}]);
+  if(error){toast('Error al guardar','danger');return;}
+  closeModal(); toast('Cotización creada');
+  await loadAll(); renderPage();
+}
+async function saveAppt() {
+  const lead_name=document.getElementById('f-alead').value;
+  const type=document.getElementById('f-atype').value;
+  const date=document.getElementById('f-adate').value;
+  const time=document.getElementById('f-atime').value;
+  const moto=document.getElementById('f-amoto').value;
+  const notes=document.getElementById('f-anotes').value.trim();
+  if(!lead_name||!date||!time){toast('Completa los campos requeridos','danger');return;}
+  const {error}=await sb.from('appointments').insert([{lead_name,type,date,time,moto,notes,status:'Pendiente'}]);
+  if(error){toast('Error al guardar','danger');return;}
+  closeModal(); toast('Cita agendada');
+  await loadAll(); renderPage();
+}
+
+// ── EXCEL EXPORT ──────────────────────────────────────────────────────────────
+function exportExcel(type) {
+  const wb = XLSX.utils.book_new();
+  const all = {leads:STATE.leads,inventory:STATE.inventory,clients:STATE.clients,quotes:STATE.quotes,appts:STATE.appts};
+  const names = {leads:'Prospectos',inventory:'Inventario',clients:'Clientes',quotes:'Cotizaciones',appts:'Agenda'};
+  const targets = type==='all' ? Object.keys(all) : [type];
+  targets.forEach(k=>{
+    const ws=XLSX.utils.json_to_sheet(all[k]);
+    XLSX.utils.book_append_sheet(wb,ws,names[k]);
+  });
+  XLSX.writeFile(wb, type==='all'?'MotoCRM_Completo.xlsx':`MotoCRM_${names[type]}.xlsx`);
+  toast('Excel exportado');
+}
+
+// ── BADGE HELPERS ─────────────────────────────────────────────────────────────
+function stageBadge(s) {
+  const c=STAGE_COLOR[s]||'#64748b';
+  return `<span class="badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${esc(s)}</span>`;
+}
+function quoteBadge(s) {
+  const c=QUOTE_COLOR[s]||'#64748b';
+  return `<span class="badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${esc(s)}</span>`;
+}
+</script>
+</body>
+</html>
