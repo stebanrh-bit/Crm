@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>MotoCRM — Sistema de Ventas</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -17,25 +19,23 @@
 }
 [data-theme="light"]{
   --bg:#f5f3ee;--surface:#ffffff;--surface2:#f0ede6;--surface3:#e8e4db;
-  --border:#d4cfc4;--accent:#c9a000;--accent2:#b08a00;
-  --text:#1a1915;--muted:#7a7465;--danger:#dc2626;--success:#16a34a;--info:#2563eb;
+  --border:#d4cfc4;--text:#1a1915;--muted:#7a7465;
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;transition:background .2s,color .2s;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;}
 .hidden{display:none!important;}
-.theme-toggle{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 8px;cursor:pointer;font-size:16px;}
 
-/* ── AUTH ── */
+/* AUTH */
 #auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;}
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:40px;width:360px;}
 .auth-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:30px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;}
 .auth-sub{font-size:10px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:28px;margin-top:3px;}
 .auth-tabs{display:flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:20px;}
 .auth-tab{flex:1;padding:9px;text-align:center;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);transition:all .15s;}
-.auth-tab.active{background:var(--accent);color:var(--bg);}
+.auth-tab.active{background:var(--accent);color:#0f0e0b;}
 .auth-error{background:#ef444422;border:1px solid #ef444444;color:#ef4444;border-radius:4px;padding:8px 12px;font-size:12px;margin-bottom:12px;}
 .auth-info{background:#3b82f622;border:1px solid #3b82f644;color:#3b82f6;border-radius:4px;padding:8px 12px;font-size:12px;margin-bottom:12px;}
 
-/* ── LAYOUT ── */
+/* LAYOUT */
 #app{display:flex;min-height:100vh;}
 .sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;overflow-y:auto;}
 .sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid var(--border);}
@@ -48,28 +48,31 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Barlow
 .nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(245,197,24,.06);}
 .nav-icon{font-size:15px;width:20px;text-align:center;}
 .sidebar-footer{padding:14px 20px;border-top:1px solid var(--border);}
-.avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;color:var(--bg);flex-shrink:0;}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;color:#0f0e0b;flex-shrink:0;}
 .user-chip{display:flex;align-items:center;gap:10px;}
 .user-name{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.user-role{font-size:11px;color:var(--danger);cursor:pointer;}
 .main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-width:0;}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
 .page-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;letter-spacing:1px;text-transform:uppercase;}
 .page-sub{font-size:11px;color:var(--muted);margin-top:1px;}
 .topbar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
 #content{padding:24px 28px;flex:1;}
 
-/* ── BUTTONS ── */
+/* BUTTONS */
 .btn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:7px 14px;border-radius:4px;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;}
 .btn:disabled{opacity:.4;cursor:not-allowed;}
-.btn-primary{background:var(--accent);color:var(--bg);}
+.btn-primary{background:var(--accent);color:#0f0e0b;}
 .btn-primary:hover:not(:disabled){background:var(--accent2);}
 .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
 .btn-ghost:hover{color:var(--text);border-color:var(--muted);}
+.btn-success{background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;}
 .btn-danger{background:#ef444422;color:#ef4444;border:1px solid #ef444444;}
+.btn-wa{background:#25D36622;color:#25D366;border:1px solid #25D36644;}
 .btn-sm{padding:4px 10px;font-size:11px;}
+.theme-toggle{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 8px;cursor:pointer;font-size:16px;}
 
-/* ── FORMS ── */
+/* FORMS */
 .form-row{margin-bottom:12px;}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .form-label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-weight:600;}
@@ -81,20 +84,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Barlow
 .search-input:focus{border-color:var(--accent);}
 .search-input::placeholder{color:var(--muted);}
 
-/* ── TABLE ── */
+/* TABLE */
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .section-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:19px;letter-spacing:1px;text-transform:uppercase;}
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:24px;overflow-x:auto;}
-table{width:100%;border-collapse:collapse;min-width:600px;}
+table{width:100%;border-collapse:collapse;min-width:500px;}
 th{background:var(--surface2);padding:10px 14px;text-align:left;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;}
 td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tbody tr:hover td{background:rgba(245,197,24,.025);cursor:pointer;}
 
-/* ── BADGE ── */
+/* BADGE */
 .badge{display:inline-block;padding:2px 9px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;}
 
-/* ── KPI ── */
+/* KPI */
 .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;position:relative;overflow:hidden;}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent);}
@@ -103,7 +106,7 @@ tbody tr:hover td{background:rgba(245,197,24,.025);cursor:pointer;}
 .kpi-delta{font-size:11px;color:var(--success);margin-top:5px;}
 .kpi-icon{position:absolute;right:14px;top:14px;font-size:26px;opacity:.12;}
 
-/* ── PIPELINE ── */
+/* PIPELINE */
 .pipeline-board{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
 .pipeline-col{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;min-height:380px;}
 .pipeline-col-header{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid;}
@@ -113,8 +116,9 @@ tbody tr:hover td{background:rgba(245,197,24,.025);cursor:pointer;}
 .lead-card-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;}
 .lead-card-moto{font-size:11px;color:var(--muted);margin-top:2px;}
 .lead-card-budget{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--accent);margin-top:7px;}
+.lead-card-days{font-size:10px;margin-top:4px;}
 
-/* ── PIPELINE MINI ── */
+/* PIPELINE MINI */
 .pipeline-mini{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px;}
 .stage-col{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;}
 .stage-header{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
@@ -123,10 +127,12 @@ tbody tr:hover td{background:rgba(245,197,24,.025);cursor:pointer;}
 .mini-lead-name{font-weight:600;}
 .mini-lead-moto{color:var(--muted);font-size:11px;margin-top:1px;}
 
-/* ── INVENTORY ── */
+/* INVENTORY */
 .inv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
-.inv-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;transition:border-color .15s;}
+.inv-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;transition:border-color .15s;position:relative;}
 .inv-card:hover{border-color:var(--accent);}
+.inv-card.stock-low{border-color:#f59e0b;}
+.inv-stock-alert{position:absolute;top:10px;right:10px;background:#f59e0b;color:#000;border-radius:3px;padding:2px 7px;font-size:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;}
 .inv-moto{font-size:36px;margin-bottom:10px;}
 .inv-model{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:21px;line-height:1;}
 .inv-brand{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;margin-bottom:10px;}
@@ -134,15 +140,18 @@ tbody tr:hover td{background:rgba(245,197,24,.025);cursor:pointer;}
 .inv-chip{background:var(--surface2);border-radius:3px;padding:2px 7px;font-size:11px;color:var(--muted);}
 .inv-price{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:var(--accent);}
 .inv-footer{display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px;}
+.inv-img{width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:10px;border:1px solid var(--border);}
+.inv-img-placeholder{width:100%;height:80px;display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:10px;}
 
-/* ── MODAL ── */
+/* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:26px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
-.modal-lg{max-width:660px;}
+.modal-lg{max-width:680px;}
+.modal-xl{max-width:820px;}
 .modal-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:1px;text-transform:uppercase;margin-bottom:18px;color:var(--accent);}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);}
 
-/* ── QUOTE ── */
+/* QUOTE */
 .quote-result{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:14px;}
 .quote-big{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;color:var(--accent);}
 .quote-detail{font-size:12px;color:var(--muted);margin-top:3px;}
@@ -150,7 +159,7 @@ tbody tr:hover td{background:rgba(245,197,24,.025);cursor:pointer;}
 .quote-row:last-child{border-bottom:none;}
 .quote-row-label{color:var(--muted);}
 
-/* ── CALENDAR ── */
+/* CALENDAR */
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .cal-month{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:1px;text-transform:uppercase;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
@@ -164,23 +173,79 @@ tbody tr:hover td{background:rgba(245,197,24,.025);cursor:pointer;}
 .cal-event.pendiente{background:#f59e0b;color:#000;}
 .cal-event.cancelada{background:#ef4444;color:#fff;}
 
-/* ── ACTIVITY ── */
+/* NOTIFICATIONS */
+.notif-bell{position:relative;cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:16px;}
+.notif-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:2px solid var(--surface);display:none;}
+.notif-dot.show{display:block;}
+.notif-panel{position:fixed;top:58px;right:16px;width:320px;background:var(--surface);border:1px solid var(--border);border-radius:10px;z-index:300;box-shadow:0 8px 32px rgba(0,0,0,.4);max-height:420px;overflow-y:auto;}
+.notif-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--surface);}
+.notif-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;letter-spacing:1px;text-transform:uppercase;}
+.notif-item{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+.notif-item:hover{background:var(--surface2);}
+.notif-item.unread{border-left:3px solid var(--accent);}
+.notif-item-title{font-weight:600;font-size:13px;}
+.notif-item-body{font-size:12px;color:var(--muted);margin-top:2px;}
+.notif-item-time{font-size:11px;color:var(--muted);margin-top:3px;}
+.notif-empty{padding:24px;text-align:center;color:var(--muted);font-size:13px;}
+
+/* ROLES */
+.role-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.role-gerente{background:#f5c51822;color:#f5c518;border:1px solid #f5c51844;}
+.role-vendedor{background:#3b82f622;color:#3b82f6;border:1px solid #3b82f644;}
+.users-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.user-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;}
+.user-card-avatar{width:44px;height:44px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#0f0e0b;margin-bottom:10px;}
+.user-card-name{font-weight:600;font-size:14px;}
+.user-card-email{font-size:11px;color:var(--muted);margin-top:2px;margin-bottom:10px;}
+
+/* ACTIVITY LOG */
+.activity-log{border-left:2px solid var(--border);padding-left:16px;margin-top:8px;}
+.activity-log-item{position:relative;padding-bottom:14px;}
+.activity-log-item::before{content:'';position:absolute;left:-20px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);}
+.activity-log-text{font-size:13px;}
+.activity-log-time{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* CHARTS */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;}
+.chart-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;color:var(--muted);}
+
+/* META */
+.meta-bar-wrap{background:var(--surface2);border-radius:6px;height:12px;overflow:hidden;margin-top:6px;}
+.meta-bar{height:100%;border-radius:6px;background:var(--accent);transition:width .5s;}
+
+/* REMINDER */
+.reminder-badge{background:#a855f722;color:#a855f7;border:1px solid #a855f744;padding:2px 8px;border-radius:3px;font-size:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;display:inline-block;}
+
+/* COMMISSIONS */
+.comm-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;text-align:center;}
+.comm-value{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:30px;color:var(--accent);}
+.comm-label{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+
+/* WHATSAPP TEMPLATES */
+.template-card{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;}
+.template-card:hover{border-color:var(--accent);}
+.template-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.template-preview{font-size:12px;color:var(--muted);line-height:1.5;}
+
+/* DETAIL PANEL */
+.two-col{display:grid;grid-template-columns:1fr 360px;gap:20px;}
+.detail-panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;max-height:85vh;overflow-y:auto;}
+.detail-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+
+/* MISC */
+.loading{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--muted);}
+.spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:12px;}
+.empty{text-align:center;padding:36px;color:var(--muted);font-size:13px;}
 .activity-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
 .activity-item:last-child{border-bottom:none;}
 .activity-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);margin-top:5px;flex-shrink:0;}
 .activity-time{font-size:11px;color:var(--muted);margin-top:2px;}
-
-/* ── MISC ── */
-.loading{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--muted);}
-.spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:12px;}
-.empty{text-align:center;padding:36px;color:var(--muted);font-size:13px;}
-.two-col{display:grid;grid-template-columns:1fr 340px;gap:20px;}
-.detail-panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;}
-.detail-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
 .toast{position:fixed;bottom:24px;right:24px;padding:10px 18px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;z-index:999;animation:fadeIn .2s ease;color:#fff;}
 .toast.success{background:#22c55e;}
 .toast.danger{background:#ef4444;}
 .toast.info{background:#3b82f6;}
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
@@ -203,17 +268,17 @@ tbody tr:hover td{background:rgba(245,197,24,.025);cursor:pointer;}
     <div id="auth-msg" class="hidden"></div>
     <div id="auth-name-row" class="form-row hidden">
       <label class="form-label">Nombre completo</label>
-      <input class="form-input" id="auth-name" placeholder="Esteban Reyes" />
+      <input class="form-input" id="auth-name" placeholder="Esteban Reyes"/>
     </div>
     <div class="form-row">
       <label class="form-label">Email</label>
-      <input class="form-input" id="auth-email" type="email" placeholder="vendedor@agencia.com" />
+      <input class="form-input" id="auth-email" type="email" placeholder="vendedor@agencia.com"/>
     </div>
     <div class="form-row">
       <label class="form-label">Contraseña</label>
-      <input class="form-input" id="auth-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSubmit()" />
+      <input class="form-input" id="auth-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSubmit()"/>
     </div>
-    <button class="btn btn-primary" id="auth-btn" style="width:100%;padding:12px;margin-top:8px;" onclick="authSubmit()">Entrar</button>
+    <button class="btn btn-primary" id="auth-btn" style="width:100%;padding:12px;margin-top:8px" onclick="authSubmit()">Entrar</button>
   </div>
 </div>
 
@@ -233,13 +298,19 @@ tbody tr:hover td{background:rgba(245,197,24,.025);cursor:pointer;}
       <div class="nav-item" data-page="agenda" onclick="navigate('agenda')"><span class="nav-icon">◷</span>Agenda</div>
       <div class="nav-item" data-page="inventory" onclick="navigate('inventory')"><span class="nav-icon">⬢</span>Inventario</div>
       <div class="nav-item" data-page="clients" onclick="navigate('clients')"><span class="nav-icon">◎</span>Clientes</div>
+      <div class="nav-section">Gestión</div>
+      <div class="nav-item" data-page="reportes" onclick="navigate('reportes')"><span class="nav-icon">◑</span>Reportes</div>
+      <div class="nav-item" data-page="comisiones" onclick="navigate('comisiones')"><span class="nav-icon">◐</span>Comisiones</div>
+      <div class="nav-item" data-page="whatsapp" onclick="navigate('whatsapp')"><span class="nav-icon">◍</span>WhatsApp</div>
+      <div class="nav-item" id="nav-usuarios" data-page="usuarios" onclick="navigate('usuarios')" style="display:none"><span class="nav-icon">⊙</span>Usuarios</div>
     </nav>
     <div class="sidebar-footer">
       <div class="user-chip">
         <div class="avatar" id="user-avatar">ER</div>
         <div style="flex:1;min-width:0;">
           <div class="user-name" id="user-name">—</div>
-          <div class="user-role" onclick="logout()">Cerrar sesión</div>
+          <div id="user-role-label" style="font-size:11px;margin-top:2px"></div>
+          <div style="font-size:11px;color:var(--danger);cursor:pointer;margin-top:2px" onclick="logout()">Cerrar sesión</div>
         </div>
       </div>
     </div>
@@ -252,247 +323,337 @@ tbody tr:hover td{background:rgba(245,197,24,.025);cursor:pointer;}
         <div class="page-sub" id="topbar-sub">Resumen general</div>
       </div>
       <div class="topbar-actions" id="topbar-actions"></div>
-      <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙</button>
+      <div class="topbar-right">
+        <div class="notif-bell" id="notif-bell" onclick="toggleNotifPanel()">🔔<div class="notif-dot" id="notif-dot"></div></div>
+        <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙</button>
+      </div>
     </div>
     <div id="content"></div>
   </div>
 </div>
 
-<!-- MODAL CONTAINER -->
 <div id="modal-root"></div>
 <div id="toast-root"></div>
+<div id="notif-panel" class="notif-panel hidden"></div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────────────────
-function toggleTheme() {
-  const html = document.documentElement;
-  const newTheme = html.getAttribute('data-theme') === 'light' ? null : 'light';
-  if(newTheme) html.setAttribute('data-theme', 'light');
-  else html.removeAttribute('data-theme');
-  document.getElementById('theme-btn').textContent = newTheme ? '☀️' : '🌙';
-  localStorage.setItem('motocrm-theme', newTheme || 'dark');
-}
-const _savedTheme = localStorage.getItem('motocrm-theme');
-if(_savedTheme === 'light') { document.documentElement.setAttribute('data-theme','light'); }
+// ── CONFIG ────────────────────────────────────────────
 const SUPABASE_URL = 'https://howmnrsajhfxmcafvipu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhvd21ucnNhamhmeG1jYWZ2aXB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDY1OTksImV4cCI6MjA5NjUyMjU5OX0.4Z523iH-Yj6_CthwKeljlPLDBIrVwkk72yTDqJYwEXg';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── STATE ────────────────────────────────────────────────────────────────────
-let STATE = { page: 'dashboard', user: null, leads: [], inventory: [], clients: [], quotes: [], appts: [], search: '' };
+// ── CONSTANTS ─────────────────────────────────────────
 const STAGES = ['Nuevo','Contactado','Interesado','Prueba','Cerrado'];
 const STAGE_COLOR = {Nuevo:'#64748b',Contactado:'#3b82f6',Interesado:'#f59e0b',Prueba:'#a855f7',Cerrado:'#22c55e'};
 const INV_COLOR = {Disponible:'#22c55e',Apartada:'#f59e0b',Vendida:'#ef4444'};
 const QUOTE_COLOR = {Borrador:'#64748b',Enviada:'#3b82f6',Aceptada:'#22c55e',Rechazada:'#ef4444'};
+const META_MENSUAL = 5; // ventas meta por mes
+const STOCK_MIN = 2;    // alerta cuando quedan ≤2 unidades del mismo modelo
+const COMISION_PCT = 3; // % comisión sobre precio de venta
 const fmtMXN = n => '$' + Number(n||0).toLocaleString('es-MX') + ' MXN';
-const calcMens = (p,e,pl,t) => { const c=p-e, r=t/100/12; return r===0?c/pl:(c*r*Math.pow(1+r,pl))/(Math.pow(1+r,pl)-1); };
+const calcMens = (p,e,pl,t) => { const c=p-e,r=t/100/12; return r===0?c/pl:(c*r*Math.pow(1+r,pl))/(Math.pow(1+r,pl)-1); };
 const today = () => new Date().toISOString().slice(0,10);
 const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const daysSince = d => Math.floor((Date.now()-new Date(d||Date.now()))/(1000*60*60*24));
 
-// ── TOAST ─────────────────────────────────────────────────────────────────────
+// ── STATE ─────────────────────────────────────────────
+let STATE = { page:'dashboard', user:null, leads:[], inventory:[], clients:[], quotes:[], appts:[], activity:[], search:'' };
+let STATE_ROLE = 'vendedor';
+let STATE_USERS = [];
+let NOTIFS = [];
+let notifOpen = false;
+let selectedQuoteId = null;
+let calView = false;
+let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
+let charts = {};
+
+// ── THEME ─────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const newTheme = html.getAttribute('data-theme')==='light' ? null : 'light';
+  if(newTheme) html.setAttribute('data-theme','light'); else html.removeAttribute('data-theme');
+  document.getElementById('theme-btn').textContent = newTheme ? '☀️' : '🌙';
+  localStorage.setItem('motocrm-theme', newTheme||'dark');
+}
+const _savedTheme = localStorage.getItem('motocrm-theme');
+if(_savedTheme==='light') document.documentElement.setAttribute('data-theme','light');
+
+// ── TOAST ─────────────────────────────────────────────
 function toast(msg, type='success') {
   const el = document.createElement('div');
   el.className = `toast ${type}`;
   el.textContent = msg;
   document.getElementById('toast-root').appendChild(el);
-  setTimeout(() => el.remove(), 2800);
+  setTimeout(()=>el.remove(), 2800);
 }
 
-// ── AUTH ──────────────────────────────────────────────────────────────────────
+// ── AUTH ──────────────────────────────────────────────
 let authMode = 'login';
 function switchTab(mode) {
   authMode = mode;
-  document.getElementById('tab-login').classList.toggle('active', mode==='login');
-  document.getElementById('tab-register').classList.toggle('active', mode==='register');
-  document.getElementById('auth-name-row').classList.toggle('hidden', mode==='login');
-  document.getElementById('auth-btn').textContent = mode==='login' ? 'Entrar' : 'Crear Cuenta';
+  document.getElementById('tab-login').classList.toggle('active',mode==='login');
+  document.getElementById('tab-register').classList.toggle('active',mode==='register');
+  document.getElementById('auth-name-row').classList.toggle('hidden',mode==='login');
+  document.getElementById('auth-btn').textContent = mode==='login'?'Entrar':'Crear Cuenta';
   document.getElementById('auth-msg').classList.add('hidden');
 }
-function setAuthMsg(msg, type='error') {
+function setAuthMsg(msg,type='error') {
   const el = document.getElementById('auth-msg');
-  el.className = type==='error' ? 'auth-error' : 'auth-info';
-  el.textContent = msg;
-  el.classList.remove('hidden');
+  el.className = type==='error'?'auth-error':'auth-info';
+  el.textContent = msg; el.classList.remove('hidden');
 }
 async function authSubmit() {
-  const email = document.getElementById('auth-email').value.trim();
-  const pass = document.getElementById('auth-pass').value;
-  const name = document.getElementById('auth-name').value.trim();
-  if (!email || !pass) return setAuthMsg('Completa email y contraseña');
-  document.getElementById('auth-btn').textContent = 'Cargando…';
-  document.getElementById('auth-btn').disabled = true;
-  if (authMode === 'login') {
-    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-    if (error) { setAuthMsg(error.message); }
+  const email=document.getElementById('auth-email').value.trim();
+  const pass=document.getElementById('auth-pass').value;
+  const name=document.getElementById('auth-name').value.trim();
+  if(!email||!pass){setAuthMsg('Completa email y contraseña');return;}
+  document.getElementById('auth-btn').textContent='Cargando…';
+  document.getElementById('auth-btn').disabled=true;
+  if(authMode==='login') {
+    const {error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error) setAuthMsg(error.message);
   } else {
-    if (!name) { setAuthMsg('Ingresa tu nombre'); document.getElementById('auth-btn').disabled=false; document.getElementById('auth-btn').textContent='Crear Cuenta'; return; }
-    const { error } = await sb.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
-    if (error) setAuthMsg(error.message);
-    else setAuthMsg('✓ Revisa tu email para confirmar tu cuenta', 'info');
+    if(!name){setAuthMsg('Ingresa tu nombre');document.getElementById('auth-btn').disabled=false;document.getElementById('auth-btn').textContent='Crear Cuenta';return;}
+    const {error}=await sb.auth.signUp({email,password:pass,options:{data:{full_name:name}}});
+    if(error) setAuthMsg(error.message);
+    else setAuthMsg('✓ Revisa tu email para confirmar tu cuenta','info');
   }
-  document.getElementById('auth-btn').disabled = false;
-  document.getElementById('auth-btn').textContent = authMode==='login' ? 'Entrar' : 'Crear Cuenta';
+  document.getElementById('auth-btn').disabled=false;
+  document.getElementById('auth-btn').textContent=authMode==='login'?'Entrar':'Crear Cuenta';
 }
-async function logout() {
-  await sb.auth.signOut();
-}
+async function logout() { await sb.auth.signOut(); }
 
-// ── SESSION LISTENER ──────────────────────────────────────────────────────────
-sb.auth.onAuthStateChange(async (_e, session) => {
-  if (session) {
-    STATE.user = session.user;
-    const name = session.user.user_metadata?.full_name || session.user.email || 'Usuario';
-    const initials = name.slice(0,2).toUpperCase();
-    document.getElementById('user-name').textContent = name;
-    document.getElementById('user-avatar').textContent = initials;
+// ── SESSION ───────────────────────────────────────────
+sb.auth.onAuthStateChange(async(_e,session)=>{
+  if(session){
+    STATE.user=session.user;
+    const name=session.user.user_metadata?.full_name||session.user.email||'Usuario';
+    document.getElementById('user-name').textContent=name;
+    document.getElementById('user-avatar').textContent=name.slice(0,2).toUpperCase();
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
     await loadAll();
+    await ensureUserRole();
+    await loadUserRole();
+    await loadUsers();
+    await loadNotifs();
+    subscribeNotifs();
     navigate('dashboard');
   } else {
-    STATE.user = null;
+    STATE.user=null;
     document.getElementById('auth-screen').classList.remove('hidden');
     document.getElementById('app').classList.add('hidden');
   }
 });
 
-// ── DATA LOAD ─────────────────────────────────────────────────────────────────
+// ── LOAD DATA ─────────────────────────────────────────
 async function loadAll() {
-  const [l,inv,c,q,a] = await Promise.all([
+  const [l,inv,c,q,a,act]=await Promise.all([
     sb.from('leads').select('*').order('created_at',{ascending:false}),
     sb.from('inventory').select('*').order('created_at',{ascending:false}),
     sb.from('clients').select('*').order('created_at',{ascending:false}),
     sb.from('quotes').select('*').order('created_at',{ascending:false}),
     sb.from('appointments').select('*').order('date',{ascending:true}),
+    sb.from('activity_log').select('*').order('created_at',{ascending:false}).limit(50),
   ]);
-  if(l.data) STATE.leads = l.data;
-  if(inv.data) STATE.inventory = inv.data;
-  if(c.data) STATE.clients = c.data;
-  if(q.data) STATE.quotes = q.data;
-  if(a.data) STATE.appts = a.data;
+  if(l.data) STATE.leads=l.data;
+  if(inv.data) STATE.inventory=inv.data;
+  if(c.data) STATE.clients=c.data;
+  if(q.data) STATE.quotes=q.data;
+  if(a.data) STATE.appts=a.data;
+  if(act.data) STATE.activity=act.data;
 }
 
-// ── REALTIME ──────────────────────────────────────────────────────────────────
-['leads','inventory','clients','quotes','appointments'].forEach(t => {
-  sb.channel('rt_'+t).on('postgres_changes',{event:'*',schema:'public',table:t}, async () => {
+// ── REALTIME ──────────────────────────────────────────
+['leads','inventory','clients','quotes','appointments','activity_log'].forEach(t=>{
+  sb.channel('rt_'+t).on('postgres_changes',{event:'*',schema:'public',table:t},async()=>{
     await loadAll(); renderPage();
   }).subscribe();
 });
 
-// ── NAVIGATION ───────────────────────────────────────────────────────────────
+// ── NAVIGATE ──────────────────────────────────────────
 const PAGE_META = {
-  dashboard: ['Dashboard','Resumen general'],
-  pipeline:  ['Pipeline','Proceso de ventas'],
-  leads:     ['Prospectos','Gestión de leads'],
-  quotes:    ['Cotizaciones','Financiamiento'],
-  agenda:    ['Agenda','Citas y pruebas de manejo'],
-  inventory: ['Inventario','Catálogo de motos'],
-  clients:   ['Clientes','Base de clientes'],
+  dashboard:['Dashboard','Resumen general'],
+  pipeline:['Pipeline','Proceso de ventas'],
+  leads:['Prospectos','Gestión de leads'],
+  quotes:['Cotizaciones','Financiamiento'],
+  agenda:['Agenda','Citas y pruebas de manejo'],
+  inventory:['Inventario','Catálogo de motos'],
+  clients:['Clientes','Base de clientes'],
+  reportes:['Reportes','Métricas y gráficas'],
+  comisiones:['Comisiones','Cálculo por vendedor'],
+  whatsapp:['WhatsApp','Mensajes y plantillas'],
+  usuarios:['Usuarios','Gestión de equipo'],
 };
 function navigate(page) {
-  STATE.page = page; STATE.search = '';
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.page === page));
-  const [t,s] = PAGE_META[page] || ['—',''];
-  document.getElementById('topbar-title').textContent = t;
-  document.getElementById('topbar-sub').textContent = s;
+  STATE.page=page; STATE.search='';
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.page===page));
+  const [t,s]=PAGE_META[page]||['—',''];
+  document.getElementById('topbar-title').textContent=t;
+  document.getElementById('topbar-sub').textContent=s;
   renderTopbarActions();
+  // destroy charts when leaving reportes
+  if(page!=='reportes') { Object.values(charts).forEach(c=>c.destroy&&c.destroy()); charts={}; }
   renderPage();
 }
 function renderTopbarActions() {
-  const p = STATE.page;
-  let html = '';
-  if (p==='leads'||p==='pipeline') html = `<input class="search-input" id="search-box" placeholder="Buscar…" value="${esc(STATE.search)}" oninput="STATE.search=this.value;renderPage()" /><button class="btn btn-ghost" onclick="exportExcel('leads')">↓ Excel</button><button class="btn btn-primary" onclick="openModal('lead')">+ Prospecto</button>`;
-  if (p==='inventory') html = `<button class="btn btn-ghost" onclick="exportExcel('inventory')">↓ Excel</button><button class="btn btn-primary" onclick="openModal('moto')">+ Moto</button>`;
-  if (p==='clients') html = `<button class="btn btn-ghost" onclick="exportExcel('clients')">↓ Excel</button>`;
-  if (p==='quotes') html = `<button class="btn btn-ghost" onclick="exportExcel('quotes')">↓ Excel</button><button class="btn btn-primary" onclick="openModal('quote')">+ Cotización</button>`;
-  if (p==='agenda') html = `<button class="btn btn-ghost btn-toggle-cal" onclick="toggleCalView()">Vista Calendario</button><button class="btn btn-primary" onclick="openModal('appt')">+ Cita</button>`;
-  if (p==='dashboard') html = `<button class="btn btn-ghost" onclick="exportExcel('all')">↓ Exportar Todo</button>`;
-  document.getElementById('topbar-actions').innerHTML = html;
+  const p=STATE.page; let html='';
+  if(p==='leads'||p==='pipeline') html=`<input class="search-input" placeholder="Buscar…" value="${esc(STATE.search)}" oninput="STATE.search=this.value;renderPage()"/><button class="btn btn-ghost" onclick="exportExcel('leads')">↓ Excel</button><button class="btn btn-primary" onclick="openModal('lead')">+ Prospecto</button>`;
+  if(p==='inventory') html=`<button class="btn btn-ghost" onclick="exportExcel('inventory')">↓ Excel</button><button class="btn btn-primary" onclick="openModal('moto')">+ Moto</button>`;
+  if(p==='clients') html=`<button class="btn btn-ghost" onclick="exportExcel('clients')">↓ Excel</button>`;
+  if(p==='quotes') html=`<button class="btn btn-ghost" onclick="exportExcel('quotes')">↓ Excel</button><button class="btn btn-primary" onclick="openModal('quote')">+ Cotización</button>`;
+  if(p==='agenda') html=`<button class="btn btn-ghost" onclick="toggleCalView()">${calView?'Vista Lista':'Vista Calendario'}</button><button class="btn btn-primary" onclick="openModal('appt')">+ Cita</button>`;
+  if(p==='dashboard') html=`<button class="btn btn-ghost" onclick="exportExcel('all')">↓ Exportar Todo</button>`;
+  if(p==='reportes') html=`<button class="btn btn-ghost" onclick="exportReportePDF()">↓ PDF Reporte</button>`;
+  document.getElementById('topbar-actions').innerHTML=html;
 }
 
-// ── PAGE RENDERER ─────────────────────────────────────────────────────────────
+// ── RENDER PAGE ───────────────────────────────────────
 function renderPage() {
-  const c = document.getElementById('content');
-  c.innerHTML = '';
-  const div = document.createElement('div');
-  div.className = 'fade-in';
+  const c=document.getElementById('content');
+  c.innerHTML='';
+  const div=document.createElement('div');
+  div.className='fade-in';
   switch(STATE.page) {
-    case 'dashboard': div.innerHTML = renderDashboard(); break;
-    case 'pipeline':  div.innerHTML = renderPipeline(); break;
-    case 'leads':     div.innerHTML = renderLeads(); break;
-    case 'quotes':    div.innerHTML = renderQuotes(); break;
-    case 'agenda':    div.innerHTML = renderAgenda(); break;
-    case 'inventory': div.innerHTML = renderInventory(); break;
-    case 'clients':   div.innerHTML = renderClients(); break;
+    case 'dashboard':  div.innerHTML=renderDashboard(); break;
+    case 'pipeline':   div.innerHTML=renderPipeline(); break;
+    case 'leads':      div.innerHTML=renderLeads(); break;
+    case 'quotes':     div.innerHTML=renderQuotes(); break;
+    case 'agenda':     div.innerHTML=renderAgenda(); break;
+    case 'inventory':  div.innerHTML=renderInventory(); break;
+    case 'clients':    div.innerHTML=renderClients(); break;
+    case 'reportes':   div.innerHTML=renderReportes(); break;
+    case 'comisiones': div.innerHTML=renderComisiones(); break;
+    case 'whatsapp':   div.innerHTML=renderWhatsApp(); break;
+    case 'usuarios':   div.innerHTML=renderUsuarios(); break;
   }
   c.appendChild(div);
+  if(STATE.page==='reportes') initCharts();
 }
 
-// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+// ── DASHBOARD ─────────────────────────────────────────
 function renderDashboard() {
-  const {leads,inventory,quotes,appts} = STATE;
-  const cerrados = leads.filter(l=>l.status==='Cerrado');
-  const totalV = cerrados.reduce((a,l)=>a+Number(l.budget||0),0);
-  const disp = inventory.filter(i=>i.status==='Disponible').length;
-  const kpis = [
+  const {leads,inventory,quotes,appts}=STATE;
+  const cerrados=leads.filter(l=>l.status==='Cerrado');
+  const totalV=cerrados.reduce((a,l)=>a+Number(l.budget||0),0);
+  const disp=inventory.filter(i=>i.status==='Disponible').length;
+  const thisMonth=new Date().toISOString().slice(0,7);
+  const ventasMes=cerrados.filter(l=>(l.date||'').startsWith(thisMonth)).length;
+  const metaPct=Math.min(Math.round((ventasMes/META_MENSUAL)*100),100);
+  // reminders: leads stalled >3 days in non-closed stage
+  const stalled=leads.filter(l=>l.status!=='Cerrado'&&daysSince(l.updated_at||l.date)>3);
+
+  const kpis=[
     {label:'Leads Totales',value:leads.length,delta:`${leads.filter(l=>l.status==='Nuevo').length} nuevos`,icon:'◉'},
     {label:'En Pipeline',value:leads.filter(l=>l.status!=='Cerrado').length,delta:'activos',icon:'⬡'},
     {label:'Ventas Cerradas',value:cerrados.length,delta:fmtMXN(totalV),icon:'✓'},
     {label:'Motos Disponibles',value:disp,delta:`de ${inventory.length} en stock`,icon:'🏍'},
   ];
-  let html = `<div class="kpi-row">${kpis.map(k=>`
-    <div class="kpi-card"><div class="kpi-icon">${k.icon}</div>
-    <div class="kpi-label">${k.label}</div>
-    <div class="kpi-value">${k.value}</div>
-    <div class="kpi-delta">${k.delta}</div></div>`).join('')}</div>`;
+  let html=`<div class="kpi-row">${kpis.map(k=>`<div class="kpi-card"><div class="kpi-icon">${k.icon}</div><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.value}</div><div class="kpi-delta">${k.delta}</div></div>`).join('')}</div>`;
+
+  // Meta mensual
+  html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:20px">
+    <div style="flex:1">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Meta mensual — ${ventasMes} de ${META_MENSUAL} ventas</div>
+      <div class="meta-bar-wrap"><div class="meta-bar" style="width:${metaPct}%"></div></div>
+    </div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;color:${metaPct>=100?'var(--success)':'var(--accent)'}">${metaPct}%</div>
+  </div>`;
+
+  // Reminders alert
+  if(stalled.length>0) {
+    html+=`<div style="background:#f59e0b18;border:1px solid #f59e0b44;border-radius:8px;padding:14px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:20px">⏰</span>
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:#f59e0b;letter-spacing:1px;text-transform:uppercase">${stalled.length} prospecto${stalled.length>1?'s':''} sin actividad por +3 días</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">${stalled.map(l=>l.name).join(', ')}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="navigate('leads')">Ver →</button>
+    </div>`;
+  }
+
   // Pipeline mini
-  html += `<div class="section-header"><div class="section-title">Pipeline de Ventas</div><button class="btn btn-ghost btn-sm" onclick="navigate('pipeline')">Ver completo →</button></div>`;
-  html += `<div class="pipeline-mini">${STAGES.map(st=>{
+  html+=`<div class="section-header"><div class="section-title">Pipeline de Ventas</div><button class="btn btn-ghost btn-sm" onclick="navigate('pipeline')">Ver completo →</button></div>`;
+  html+=`<div class="pipeline-mini">${STAGES.map(st=>{
     const sl=leads.filter(l=>l.status===st);
     return `<div class="stage-col"><div class="stage-header" style="color:${STAGE_COLOR[st]}">${st}<span class="stage-count">${sl.length}</span></div>${sl.slice(0,3).map(l=>`<div class="mini-lead" style="border-left-color:${STAGE_COLOR[st]}"><div class="mini-lead-name">${esc(l.name?.split(' ')[0])}</div><div class="mini-lead-moto">${esc(l.moto)}</div></div>`).join('')}</div>`;
   }).join('')}</div>`;
+
   // Bottom row
-  html += `<div style="display:grid;grid-template-columns:1fr 1fr 300px;gap:18px;">`;
-  // Quotes
-  html += `<div><div class="section-header"><div class="section-title">Cotizaciones</div><button class="btn btn-ghost btn-sm" onclick="navigate('quotes')">Ver →</button></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Moto</th><th>Estado</th></tr></thead><tbody>${quotes.length===0?`<tr><td colspan="3"><div class="empty">Sin cotizaciones</div></td></tr>`:quotes.slice(0,4).map(q=>`<tr><td style="font-weight:600">${esc(q.lead_name)}</td><td style="color:var(--muted);font-size:12px">${esc(q.moto)}</td><td>${quoteBadge(q.status)}</td></tr>`).join('')}</tbody></table></div></div>`;
-  // Appts
-  html += `<div><div class="section-header"><div class="section-title">Próximas Citas</div><button class="btn btn-ghost btn-sm" onclick="navigate('agenda')">Ver →</button></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Tipo</th><th>Fecha</th></tr></thead><tbody>${appts.length===0?`<tr><td colspan="3"><div class="empty">Sin citas</div></td></tr>`:appts.slice(0,4).map(a=>`<tr><td style="font-weight:600">${esc(a.lead_name)}</td><td style="font-size:12px;color:var(--muted)">${esc(a.type)}</td><td style="font-size:12px">${esc(a.date)}</td></tr>`).join('')}</tbody></table></div></div>`;
-  // Activity
-  const recentLeads = STATE.leads.slice(0,5);
-  html += `<div><div class="section-header"><div class="section-title">Últimos Prospectos</div><button class="btn btn-ghost btn-sm" onclick="navigate('leads')">Ver →</button></div><div class="table-wrap" style="padding:2px 14px">${recentLeads.length===0?`<div class="empty">Sin prospectos aún</div>`:recentLeads.map(l=>`<div class="activity-item"><div class="activity-dot" style="background:${STAGE_COLOR[l.status]||'var(--accent)'}"></div><div><div style="font-size:13px;font-weight:600">${esc(l.name)}</div><div class="activity-time">${esc(l.moto)} · ${stageBadge(l.status)}</div></div></div>`).join('')}</div></div>`;
-  html += `</div>`;
+  html+=`<div style="display:grid;grid-template-columns:1fr 1fr 300px;gap:18px">`;
+  html+=`<div><div class="section-header"><div class="section-title">Cotizaciones</div><button class="btn btn-ghost btn-sm" onclick="navigate('quotes')">Ver →</button></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Moto</th><th>Estado</th></tr></thead><tbody>${quotes.length===0?`<tr><td colspan="3"><div class="empty">Sin cotizaciones</div></td></tr>`:quotes.slice(0,4).map(q=>`<tr><td style="font-weight:600">${esc(q.lead_name)}</td><td style="color:var(--muted);font-size:12px">${esc(q.moto)}</td><td>${quoteBadge(q.status)}</td></tr>`).join('')}</tbody></table></div></div>`;
+  html+=`<div><div class="section-header"><div class="section-title">Próximas Citas</div><button class="btn btn-ghost btn-sm" onclick="navigate('agenda')">Ver →</button></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Tipo</th><th>Fecha</th></tr></thead><tbody>${appts.length===0?`<tr><td colspan="3"><div class="empty">Sin citas</div></td></tr>`:appts.slice(0,4).map(a=>`<tr><td style="font-weight:600">${esc(a.lead_name)}</td><td style="font-size:12px;color:var(--muted)">${esc(a.type)}</td><td style="font-size:12px">${esc(a.date)}</td></tr>`).join('')}</tbody></table></div></div>`;
+  const recentLeads=STATE.leads.slice(0,5);
+  html+=`<div><div class="section-header"><div class="section-title">Últimos Prospectos</div></div><div class="table-wrap" style="padding:2px 14px">${recentLeads.length===0?`<div class="empty">Sin prospectos</div>`:recentLeads.map(l=>`<div class="activity-item"><div class="activity-dot" style="background:${STAGE_COLOR[l.status]||'var(--accent)'}"></div><div><div style="font-size:13px;font-weight:600">${esc(l.name)}</div><div class="activity-time">${esc(l.moto)} · ${stageBadge(l.status)}</div></div></div>`).join('')}</div></div>`;
+  html+=`</div>`;
   return html;
 }
 
-// ── PIPELINE ──────────────────────────────────────────────────────────────────
+// ── PIPELINE ──────────────────────────────────────────
 function renderPipeline() {
-  const leads = STATE.leads.filter(l => l.name?.toLowerCase().includes(STATE.search.toLowerCase()) || l.moto?.toLowerCase().includes(STATE.search.toLowerCase()));
+  const leads=STATE.leads.filter(l=>l.name?.toLowerCase().includes(STATE.search.toLowerCase())||l.moto?.toLowerCase().includes(STATE.search.toLowerCase()));
   return `<div class="pipeline-board">${STAGES.map(st=>{
     const sl=leads.filter(l=>l.status===st);
     const tot=sl.reduce((a,l)=>a+Number(l.budget||0),0);
     return `<div class="pipeline-col">
       <div class="pipeline-col-header" style="border-bottom-color:${STAGE_COLOR[st]};color:${STAGE_COLOR[st]}">${st}<span class="pipeline-total">${sl.length} leads · ${fmtMXN(tot)}</span></div>
-      ${sl.length===0?`<div style="color:var(--muted);font-size:12px;text-align:center;margin-top:20px">Sin leads</div>`:sl.map(l=>`<div class="lead-card" onclick="openLeadDetail('${l.id}')"><div class="lead-card-name">${esc(l.name)}</div><div class="lead-card-moto">${esc(l.moto)}</div><div class="lead-card-budget">${fmtMXN(l.budget)}</div><div style="font-size:11px;color:var(--muted);margin-top:5px">${esc(l.date||'')}</div></div>`).join('')}
+      ${sl.length===0?`<div style="color:var(--muted);font-size:12px;text-align:center;margin-top:20px">Sin leads</div>`:sl.map(l=>{
+        const days=daysSince(l.updated_at||l.date||l.created_at);
+        const stale=days>3&&st!=='Cerrado';
+        return `<div class="lead-card" onclick="openLeadDetail('${l.id}')">
+          <div class="lead-card-name">${esc(l.name)}</div>
+          <div class="lead-card-moto">${esc(l.moto)}</div>
+          <div class="lead-card-budget">${fmtMXN(l.budget)}</div>
+          <div class="lead-card-days" style="color:${stale?'#f59e0b':'var(--muted)'}">${stale?`⏰ ${days} días sin actividad`:`${days}d`}</div>
+        </div>`;
+      }).join('')}
     </div>`;
   }).join('')}</div>`;
 }
 
-// ── LEADS ─────────────────────────────────────────────────────────────────────
+// ── LEADS ─────────────────────────────────────────────
 function renderLeads() {
-  const leads = STATE.leads.filter(l => l.name?.toLowerCase().includes(STATE.search.toLowerCase()) || l.moto?.toLowerCase().includes(STATE.search.toLowerCase()));
-  return `<div class="table-wrap"><table><thead><tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Moto</th><th>Presupuesto</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${leads.length===0?`<tr><td colspan="7"><div class="empty">Sin prospectos. ¡Agrega el primero!</div></td></tr>`:leads.map((l,i)=>`<tr onclick="openLeadDetail('${l.id}')"><td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td><td style="font-weight:600">${esc(l.name)}</td><td style="color:var(--muted)">${esc(l.phone)}</td><td>${esc(l.moto)}</td><td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--accent)">${fmtMXN(l.budget)}</td><td>${stageBadge(l.status)}</td><td style="color:var(--muted)">${esc(l.date||'')}</td></tr>`).join('')}</tbody></table></div>`;
+  const leads=STATE.leads.filter(l=>l.name?.toLowerCase().includes(STATE.search.toLowerCase())||l.moto?.toLowerCase().includes(STATE.search.toLowerCase()));
+  return `<div class="table-wrap"><table><thead><tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Moto</th><th>Presupuesto</th><th>Estado</th><th>Días</th><th></th></tr></thead><tbody>${leads.length===0?`<tr><td colspan="8"><div class="empty">Sin prospectos. ¡Agrega el primero!</div></td></tr>`:leads.map((l,i)=>{
+    const days=daysSince(l.updated_at||l.date||l.created_at);
+    const stale=days>3&&l.status!=='Cerrado';
+    return `<tr onclick="openLeadDetail('${l.id}')">
+      <td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td>
+      <td style="font-weight:600">${esc(l.name)}</td>
+      <td style="color:var(--muted)">${esc(l.phone)}</td>
+      <td>${esc(l.moto)}</td>
+      <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--accent)">${fmtMXN(l.budget)}</td>
+      <td>${stageBadge(l.status)}</td>
+      <td style="color:${stale?'#f59e0b':'var(--muted)'}">${stale?`⏰ ${days}d`:days+'d'}</td>
+      <td onclick="event.stopPropagation()">
+        <a href="https://wa.me/52${(l.phone||'').replace(/\D/g,'')}" target="_blank" class="btn btn-wa btn-sm">WA</a>
+      </td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
 }
 
-// ── INVENTORY ─────────────────────────────────────────────────────────────────
+// ── INVENTORY ─────────────────────────────────────────
 function renderInventory() {
-  const {inventory} = STATE;
-  if (!inventory.length) return `<div class="empty">Sin motos en inventario. ¡Agrega la primera!</div>`;
-  return `<div class="inv-grid">${inventory.map(m=>`
-    <div class="inv-card">
-      <div class="inv-moto">🏍️</div>
+  const {inventory}=STATE;
+  if(!inventory.length) return `<div class="empty">Sin motos en inventario.</div>`;
+  // detect low stock models
+  const modelCount={};
+  inventory.filter(m=>m.status==='Disponible').forEach(m=>{const k=m.brand+' '+m.model;modelCount[k]=(modelCount[k]||0)+1;});
+  return `<div class="inv-grid">${inventory.map(m=>{
+    const key=m.brand+' '+m.model;
+    const lowStock=modelCount[key]<=STOCK_MIN&&m.status==='Disponible';
+    return `<div class="inv-card${lowStock?' stock-low':''}">
+      ${lowStock?`<div class="inv-stock-alert">STOCK BAJO</div>`:''}
+      ${m.photo_url?`<img class="inv-img" src="${esc(m.photo_url)}" onerror="this.style.display='none'" />`:`<div class="inv-img-placeholder">🏍️</div>`}
       <div class="inv-model">${esc(m.model)}</div>
       <div class="inv-brand">${esc(m.brand)} · ${esc(m.year)}</div>
-      <div class="inv-meta"><span class="inv-chip">${esc(m.color)}</span><span class="inv-chip">${Number(m.km)===0?'0 km':esc(m.km)+' km'}</span></div>
+      <div class="inv-meta">
+        <span class="inv-chip">${esc(m.color)}</span>
+        <span class="inv-chip">${Number(m.km)===0?'0 km':esc(m.km)+' km'}</span>
+        ${m.cilindraje?`<span class="inv-chip">${esc(m.cilindraje)}cc</span>`:''}
+        ${m.tipo?`<span class="inv-chip">${esc(m.tipo)}</span>`:''}
+      </div>
+      ${m.descripcion?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.4">${esc(m.descripcion)}</div>`:''}
       <div class="inv-footer">
         <div class="inv-price">${fmtMXN(m.price)}</div>
         <select class="form-select" style="width:auto;padding:4px 8px;font-size:12px" onchange="updateMotoStatus('${m.id}',this.value)">
@@ -500,32 +661,49 @@ function renderInventory() {
         </select>
       </div>
       <div style="margin-top:10px"><span class="badge" style="background:${INV_COLOR[m.status]||'#64748b'}22;color:${INV_COLOR[m.status]||'#64748b'};border:1px solid ${INV_COLOR[m.status]||'#64748b'}44">${esc(m.status)}</span></div>
-    </div>`).join('')}</div>`;
+    </div>`;
+  }).join('')}</div>`;
 }
 
-// ── CLIENTS ───────────────────────────────────────────────────────────────────
+// ── CLIENTS ───────────────────────────────────────────
 function renderClients() {
-  const {clients} = STATE;
-  return `<div class="table-wrap"><table><thead><tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Moto</th><th>Fecha</th><th>Total</th></tr></thead><tbody>${clients.length===0?`<tr><td colspan="7"><div class="empty">Sin clientes aún</div></td></tr>`:clients.map((c,i)=>`<tr><td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td><td style="font-weight:600">${esc(c.name)}</td><td style="color:var(--muted)">${esc(c.phone)}</td><td style="color:var(--muted)">${esc(c.email)}</td><td>${esc(c.moto)}</td><td style="color:var(--muted)">${esc(c.date||'')}</td><td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--accent)">${fmtMXN(c.total)}</td></tr>`).join('')}</tbody></table></div>`;
+  const {clients}=STATE;
+  return `<div class="table-wrap"><table><thead><tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Moto</th><th>Fecha</th><th>Total</th><th></th></tr></thead><tbody>${clients.length===0?`<tr><td colspan="8"><div class="empty">Sin clientes aún</div></td></tr>`:clients.map((c,i)=>`<tr>
+    <td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td>
+    <td style="font-weight:600">${esc(c.name)}</td>
+    <td style="color:var(--muted)">${esc(c.phone)}</td>
+    <td style="color:var(--muted)">${esc(c.email)}</td>
+    <td>${esc(c.moto)}</td>
+    <td style="color:var(--muted)">${esc(c.date||'')}</td>
+    <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--accent)">${fmtMXN(c.total)}</td>
+    <td><a href="https://wa.me/52${(c.phone||'').replace(/\D/g,'')}" target="_blank" class="btn btn-wa btn-sm">WA</a></td>
+  </tr>`).join('')}</tbody></table></div>`;
 }
 
-// ── QUOTES ────────────────────────────────────────────────────────────────────
-let selectedQuoteId = null;
+// ── QUOTES ────────────────────────────────────────────
 function renderQuotes() {
-  const {quotes} = STATE;
-  const sel = selectedQuoteId ? quotes.find(q=>q.id===selectedQuoteId) : null;
-  let html = `<div class="${sel?'two-col':''}">`;
-  html += `<div class="table-wrap"><table><thead><tr><th>#</th><th>Cliente</th><th>Moto</th><th>Precio</th><th>Enganche</th><th>Plazo</th><th>Mensualidad</th><th>Estado</th></tr></thead><tbody>`;
-  if (!quotes.length) html += `<tr><td colspan="8"><div class="empty">Sin cotizaciones</div></td></tr>`;
-  quotes.forEach((q,i) => {
-    const mens = calcMens(q.price,q.enganche,q.plazo,q.tasa);
-    html += `<tr onclick="selectQuote('${q.id}')"><td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td><td style="font-weight:600">${esc(q.lead_name)}</td><td>${esc(q.moto)}</td><td style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700">${fmtMXN(q.price)}</td><td style="color:var(--muted)">${fmtMXN(q.enganche)}</td><td style="color:var(--muted)">${q.plazo} meses</td><td style="font-weight:600">${fmtMXN(Math.round(mens))}</td><td>${quoteBadge(q.status)}</td></tr>`;
+  const {quotes}=STATE;
+  const sel=selectedQuoteId?quotes.find(q=>q.id===selectedQuoteId):null;
+  let html=`<div class="${sel?'two-col':''}">`;
+  html+=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Cliente</th><th>Moto</th><th>Precio</th><th>Mensualidad</th><th>Estado</th><th></th></tr></thead><tbody>`;
+  if(!quotes.length) html+=`<tr><td colspan="7"><div class="empty">Sin cotizaciones</div></td></tr>`;
+  quotes.forEach((q,i)=>{
+    const mens=calcMens(q.price,q.enganche,q.plazo,q.tasa);
+    html+=`<tr onclick="selectQuote('${q.id}')">
+      <td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td>
+      <td style="font-weight:600">${esc(q.lead_name)}</td>
+      <td>${esc(q.moto)}</td>
+      <td style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700">${fmtMXN(q.price)}</td>
+      <td style="font-weight:600">${fmtMXN(Math.round(mens))}</td>
+      <td>${quoteBadge(q.status)}</td>
+      <td onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="generatePDF('${q.id}')">↓ PDF</button></td>
+    </tr>`;
   });
-  html += `</tbody></table></div>`;
-  if (sel) {
-    const mens = calcMens(sel.price,sel.enganche,sel.plazo,sel.tasa);
-    const total = sel.enganche + mens*sel.plazo;
-    html += `<div class="detail-panel">
+  html+=`</tbody></table></div>`;
+  if(sel){
+    const mens=calcMens(sel.price,sel.enganche,sel.plazo,sel.tasa);
+    const total=sel.enganche+mens*sel.plazo;
+    html+=`<div class="detail-panel">
       <div style="display:flex;justify-content:space-between;margin-bottom:12px">
         <div class="detail-title">Detalle</div>
         <button class="btn btn-ghost btn-sm" onclick="selectedQuoteId=null;renderPage()">✕</button>
@@ -537,30 +715,39 @@ function renderQuotes() {
         <div class="quote-big">${fmtMXN(Math.round(mens))}</div>
         <div class="quote-detail">${sel.plazo} meses · Tasa ${sel.tasa}%</div>
       </div>
-      ${[['Precio',fmtMXN(sel.price)],['Enganche',fmtMXN(sel.enganche)],['Financiar',fmtMXN(sel.price-sel.enganche)],['Total a pagar',fmtMXN(Math.round(total))]].map(([l,v])=>`<div class="quote-row"><span class="quote-row-label">${l}</span><span style="font-weight:600">${v}</span></div>`).join('')}
-      <div style="margin-top:14px">
-        <div class="form-label">Estado</div>
+      ${[['Precio',fmtMXN(sel.price)],['Enganche',fmtMXN(sel.enganche)],['Financiar',fmtMXN(sel.price-sel.enganche)],['Total a pagar',fmtMXN(Math.round(total))],['Intereses',fmtMXN(Math.round(total-sel.price))]].map(([l,v])=>`<div class="quote-row"><span class="quote-row-label">${l}</span><span style="font-weight:600">${v}</span></div>`).join('')}
+      <div style="margin-top:14px"><div class="form-label">Estado</div>
         <select class="form-select" onchange="updateQuoteStatus('${sel.id}',this.value)">
           ${['Borrador','Enviada','Aceptada','Rechazada'].map(s=>`<option${sel.status===s?' selected':''}>${s}</option>`).join('')}
         </select>
       </div>
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-primary" style="width:100%" onclick="generatePDF('${sel.id}')">↓ Descargar PDF</button>
+        <button class="btn btn-ghost" style="width:100%" onclick="sendQuoteWhatsApp('${sel.id}')">📱 Enviar por WhatsApp</button>
+      </div>
     </div>`;
   }
-  html += `</div>`;
+  html+=`</div>`;
   return html;
 }
-function selectQuote(id) { selectedQuoteId = id; renderPage(); }
+function selectQuote(id){selectedQuoteId=id;renderPage();}
 
-// ── AGENDA ────────────────────────────────────────────────────────────────────
-let calView = false;
-let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
-function toggleCalView() { calView=!calView; renderPage(); renderTopbarActions(); const b=document.querySelector('.btn-toggle-cal'); if(b) b.textContent=calView?'Vista Lista':'Vista Calendario'; }
+// ── AGENDA ────────────────────────────────────────────
+function toggleCalView(){calView=!calView;renderTopbarActions();renderPage();}
 function renderAgenda() {
-  const {appts} = STATE;
-  if (!calView) {
-    return `<div class="table-wrap"><table><thead><tr><th>#</th><th>Cliente</th><th>Tipo</th><th>Moto</th><th>Fecha</th><th>Hora</th><th>Notas</th><th>Estado</th></tr></thead><tbody>${appts.length===0?`<tr><td colspan="8"><div class="empty">Sin citas agendadas</div></td></tr>`:appts.map((a,i)=>`<tr><td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td><td style="font-weight:600">${esc(a.lead_name)}</td><td>${esc(a.type)}</td><td style="color:var(--muted)">${esc(a.moto||'—')}</td><td style="color:${a.date===today()?'var(--accent)':''}">${esc(a.date||'')}</td><td>${esc(a.time||'')}</td><td style="color:var(--muted);font-size:12px">${esc(a.notes||'—')}</td><td><select class="form-select" style="padding:3px 8px;font-size:12px;width:auto" onchange="updateApptStatus('${a.id}',this.value)">${['Pendiente','Confirmada','Cancelada'].map(s=>`<option${a.status===s?' selected':''}>${s}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`;
+  const {appts}=STATE;
+  const todayStr=today();
+  if(!calView){
+    return `<div class="table-wrap"><table><thead><tr><th>#</th><th>Cliente</th><th>Tipo</th><th>Moto</th><th>Fecha</th><th>Hora</th><th>Notas</th><th>Estado</th></tr></thead><tbody>${appts.length===0?`<tr><td colspan="8"><div class="empty">Sin citas agendadas</div></td></tr>`:appts.map((a,i)=>`<tr>
+      <td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td>
+      <td style="font-weight:600">${esc(a.lead_name)}</td><td>${esc(a.type)}</td>
+      <td style="color:var(--muted)">${esc(a.moto||'—')}</td>
+      <td style="color:${a.date===todayStr?'var(--accent)':''}">${esc(a.date||'')}</td>
+      <td>${esc(a.time||'')}</td>
+      <td style="color:var(--muted);font-size:12px">${esc(a.notes||'—')}</td>
+      <td><select class="form-select" style="padding:3px 8px;font-size:12px;width:auto" onchange="updateApptStatus('${a.id}',this.value)">${['Pendiente','Confirmada','Cancelada'].map(s=>`<option${a.status===s?' selected':''}>${s}</option>`).join('')}</select></td>
+    </tr>`).join('')}</tbody></table></div>`;
   }
-  // Calendar
   const MONTHS=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const DAYS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   const firstDay=new Date(calYear,calMonth,1).getDay();
@@ -569,79 +756,418 @@ function renderAgenda() {
   for(let i=0;i<firstDay;i++) days.push({d:new Date(calYear,calMonth,-firstDay+i+1),cur:false});
   for(let i=1;i<=totalDays;i++) days.push({d:new Date(calYear,calMonth,i),cur:true});
   while(days.length%7!==0){const last=days[days.length-1].d;days.push({d:new Date(last.getFullYear(),last.getMonth(),last.getDate()+1),cur:false});}
-  const todayStr=today();
-  let html=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px">`;
-  html+=`<div class="cal-header"><button class="btn btn-ghost btn-sm" onclick="calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderPage()">‹</button><div class="cal-month">${MONTHS[calMonth]} ${calYear}</div><button class="btn btn-ghost btn-sm" onclick="calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderPage()">›</button></div>`;
-  html+=`<div class="cal-grid">${DAYS.map(d=>`<div class="cal-day-name">${d}</div>`).join('')}${days.map(({d,cur})=>{const ds=d.toISOString().slice(0,10);const da=appts.filter(a=>a.date===ds);return `<div class="cal-day${!cur?' other-month':''}${ds===todayStr?' today':''}"><div class="cal-day-num">${d.getDate()}</div>${da.map(a=>`<div class="cal-event ${(a.status||'').toLowerCase()}" title="${esc(a.lead_name)}">${esc(a.time||'')} ${esc(a.lead_name?.split(' ')[0]||'')}</div>`).join('')}</div>`;}).join('')}</div>`;
-  html+=`</div>`;
-  return html;
+  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px">
+    <div class="cal-header">
+      <button class="btn btn-ghost btn-sm" onclick="calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderPage()">‹</button>
+      <div class="cal-month">${MONTHS[calMonth]} ${calYear}</div>
+      <button class="btn btn-ghost btn-sm" onclick="calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderPage()">›</button>
+    </div>
+    <div class="cal-grid">${DAYS.map(d=>`<div class="cal-day-name">${d}</div>`).join('')}${days.map(({d,cur})=>{
+      const ds=d.toISOString().slice(0,10);
+      const da=appts.filter(a=>a.date===ds);
+      return `<div class="cal-day${!cur?' other-month':''}${ds===todayStr?' today':''}"><div class="cal-day-num">${d.getDate()}</div>${da.map(a=>`<div class="cal-event ${(a.status||'').toLowerCase()}" title="${esc(a.lead_name)}">${esc(a.time||'')} ${esc(a.lead_name?.split(' ')[0]||'')}</div>`).join('')}</div>`;
+    }).join('')}</div>
+  </div>`;
 }
 
-// ── CRUD OPS ──────────────────────────────────────────────────────────────────
-async function updateMotoStatus(id, status) {
-  await sb.from('inventory').update({status}).eq('id',id);
-  const m = STATE.inventory.find(m=>m.id===id);
-  if(m) m.status=status;
-  toast('Estado actualizado');
-}
-async function updateQuoteStatus(id, status) {
-  await sb.from('quotes').update({status}).eq('id',id);
-  const q=STATE.quotes.find(q=>q.id===id);
-  if(q){q.status=status;}
-  renderPage();
-}
-async function updateApptStatus(id, status) {
-  await sb.from('appointments').update({status}).eq('id',id);
-  const a=STATE.appts.find(a=>a.id===id);
-  if(a) a.status=status;
-}
-async function updateLeadStatus(id, status) {
-  await sb.from('leads').update({status}).eq('id',id);
-  const l=STATE.leads.find(l=>l.id===id);
-  if(l) l.status=status;
-  toast('Etapa actualizada');
-}
-async function deleteLead(id) {
-  if(!confirm('¿Eliminar este prospecto?')) return;
-  await sb.from('leads').delete().eq('id',id);
-  STATE.leads = STATE.leads.filter(l=>l.id!==id);
-  closeModal(); toast('Prospecto eliminado','danger');
-  renderPage();
+// ── REPORTES ──────────────────────────────────────────
+function renderReportes() {
+  const {leads,clients,inventory}=STATE;
+  const cerrados=leads.filter(l=>l.status==='Cerrado');
+  const totalV=cerrados.reduce((a,l)=>a+Number(l.budget||0),0);
+  const tasaConv=leads.length>0?Math.round((cerrados.length/leads.length)*100):0;
+  const ticketProm=cerrados.length>0?Math.round(totalV/cerrados.length):0;
+  const motaMasKw=leads.reduce((acc,l)=>{if(l.moto){acc[l.moto]=(acc[l.moto]||0)+1;}return acc;},{});
+  const topMoto=Object.entries(motaMasKw).sort((a,b)=>b[1]-a[1])[0];
+
+  return `
+  <div class="kpi-row">
+    ${[
+      {label:'Tasa de Conversión',value:tasaConv+'%',delta:`${cerrados.length} de ${leads.length} leads`,icon:'◎'},
+      {label:'Ticket Promedio',value:'$'+Math.round(ticketProm/1000)+'K',delta:fmtMXN(ticketProm),icon:'◑'},
+      {label:'Total Facturado',value:'$'+Math.round(totalV/1000)+'K',delta:fmtMXN(totalV),icon:'✓'},
+      {label:'Moto Más Pedida',value:topMoto?topMoto[0].split(' ')[1]||'—':'—',delta:topMoto?topMoto[0]:'Sin datos',icon:'🏍'},
+    ].map(k=>`<div class="kpi-card"><div class="kpi-icon">${k.icon}</div><div class="kpi-label">${k.label}</div><div class="kpi-value" style="font-size:28px">${k.value}</div><div class="kpi-delta">${k.delta}</div></div>`).join('')}
+  </div>
+  <div class="charts-row">
+    <div class="chart-card"><div class="chart-title">Leads por Etapa</div><canvas id="chart-etapas" height="200"></canvas></div>
+    <div class="chart-card"><div class="chart-title">Ventas por Mes</div><canvas id="chart-ventas" height="200"></canvas></div>
+  </div>
+  <div class="charts-row">
+    <div class="chart-card"><div class="chart-title">Motos Más Solicitadas</div><canvas id="chart-motos" height="200"></canvas></div>
+    <div class="chart-card"><div class="chart-title">Estado del Inventario</div><canvas id="chart-inv" height="200"></canvas></div>
+  </div>`;
 }
 
-// ── LEAD DETAIL ───────────────────────────────────────────────────────────────
+function initCharts() {
+  const {leads,inventory}=STATE;
+  const accent='rgba(245,197,24,';
+  const CHART_DEFAULTS={color:'#7a7465',borderColor:'#2e2c24',backgroundColor:'#1a1915'};
+
+  // Etapas
+  const etapaData=STAGES.map(s=>leads.filter(l=>l.status===s).length);
+  const c1=document.getElementById('chart-etapas');
+  if(c1&&!charts.etapas){charts.etapas=new Chart(c1,{type:'bar',data:{labels:STAGES,datasets:[{data:etapaData,backgroundColor:STAGES.map(s=>STAGE_COLOR[s]+'99'),borderColor:STAGES.map(s=>STAGE_COLOR[s]),borderWidth:1}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#7a7465'}},y:{ticks:{color:'#7a7465',stepSize:1},grid:{color:'#2e2c24'}}}}});}
+
+  // Ventas por mes (últimos 6 meses)
+  const meses=[];const ventasM=[];
+  for(let i=5;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);const key=d.toISOString().slice(0,7);meses.push(d.toLocaleString('es-MX',{month:'short'}));ventasM.push(leads.filter(l=>l.status==='Cerrado'&&(l.date||'').startsWith(key)).length);}
+  const c2=document.getElementById('chart-ventas');
+  if(c2&&!charts.ventas){charts.ventas=new Chart(c2,{type:'line',data:{labels:meses,datasets:[{data:ventasM,borderColor:'#f5c518',backgroundColor:'rgba(245,197,24,.1)',tension:.4,fill:true,pointBackgroundColor:'#f5c518'}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#7a7465'}},y:{ticks:{color:'#7a7465',stepSize:1},grid:{color:'#2e2c24'}}}}});}
+
+  // Motos más pedidas
+  const motoMap={};leads.forEach(l=>{if(l.moto){const k=l.moto.split(' ').slice(0,2).join(' ');motoMap[k]=(motoMap[k]||0)+1;}});
+  const topMotos=Object.entries(motoMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const c3=document.getElementById('chart-motos');
+  if(c3&&!charts.motos){charts.motos=new Chart(c3,{type:'doughnut',data:{labels:topMotos.map(m=>m[0]),datasets:[{data:topMotos.map(m=>m[1]),backgroundColor:['#f5c518','#3b82f6','#22c55e','#a855f7','#ef4444','#f59e0b'],borderWidth:0}]},options:{plugins:{legend:{position:'right',labels:{color:'#7a7465',font:{size:11}}}}}});}
+
+  // Inventario
+  const invStatus={Disponible:inventory.filter(i=>i.status==='Disponible').length,Apartada:inventory.filter(i=>i.status==='Apartada').length,Vendida:inventory.filter(i=>i.status==='Vendida').length};
+  const c4=document.getElementById('chart-inv');
+  if(c4&&!charts.inv){charts.inv=new Chart(c4,{type:'doughnut',data:{labels:Object.keys(invStatus),datasets:[{data:Object.values(invStatus),backgroundColor:['#22c55e99','#f59e0b99','#ef444499'],borderColor:['#22c55e','#f59e0b','#ef4444'],borderWidth:1}]},options:{plugins:{legend:{position:'right',labels:{color:'#7a7465',font:{size:11}}}}}});}
+}
+
+async function exportReportePDF() {
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const {leads,inventory,clients}=STATE;
+  const cerrados=leads.filter(l=>l.status==='Cerrado');
+  const totalV=cerrados.reduce((a,l)=>a+Number(l.budget||0),0);
+  const thisMonth=new Date().toLocaleString('es-MX',{month:'long',year:'numeric'});
+
+  doc.setFillColor(15,14,11); doc.rect(0,0,210,35,'F');
+  doc.setTextColor(245,197,24); doc.setFont('helvetica','bold'); doc.setFontSize(24);
+  doc.text('MOTOCRM',14,18);
+  doc.setFontSize(10); doc.setTextColor(180,170,150); doc.setFont('helvetica','normal');
+  doc.text(`Reporte Mensual — ${thisMonth}`,14,27);
+  doc.text(`Generado: ${new Date().toLocaleDateString('es-MX')}`,150,27);
+
+  const kpis=[
+    ['Total Leads',leads.length],['Ventas Cerradas',cerrados.length],
+    ['Facturación Total',fmtMXN(totalV)],['Motos Disponibles',inventory.filter(i=>i.status==='Disponible').length],
+  ];
+  let y=50;
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(30,30,30);
+  doc.text('RESUMEN EJECUTIVO',14,y); doc.setDrawColor(245,197,24); doc.line(14,y+2,100,y+2);
+  y+=12;
+  kpis.forEach(([l,v],i)=>{
+    if(i%2===0){doc.setFillColor(245,243,238);doc.rect(12,y-6,186,10,'F');}
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(80,80,80); doc.text(l,16,y);
+    doc.setFont('helvetica','bold'); doc.setTextColor(20,20,20); doc.text(String(v),194,y,{align:'right'});
+    y+=10;
+  });
+
+  y+=8;
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(30,30,30);
+  doc.text('LEADS POR ETAPA',14,y); doc.line(14,y+2,100,y+2);
+  y+=12;
+  STAGES.forEach((s,i)=>{
+    const cnt=leads.filter(l=>l.status===s).length;
+    if(i%2===0){doc.setFillColor(245,243,238);doc.rect(12,y-6,186,10,'F');}
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(80,80,80); doc.text(s,16,y);
+    doc.setFont('helvetica','bold'); doc.setTextColor(20,20,20); doc.text(String(cnt),194,y,{align:'right'});
+    y+=10;
+  });
+
+  doc.setFillColor(15,14,11); doc.rect(0,265,210,30,'F');
+  doc.setTextColor(245,197,24); doc.setFontSize(9); doc.setFont('helvetica','bold');
+  doc.text('MotoCRM — Sistema de Ventas',14,277);
+  doc.setTextColor(180,170,150); doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text(`Reporte generado automáticamente el ${new Date().toLocaleString('es-MX')}`,14,285);
+
+  doc.save(`Reporte_MotoCRM_${thisMonth.replace(' ','_')}.pdf`);
+  toast('Reporte PDF exportado');
+}
+
+// ── COMISIONES ────────────────────────────────────────
+function renderComisiones() {
+  const {leads,clients}=STATE;
+  const cerrados=leads.filter(l=>l.status==='Cerrado');
+  const thisMonth=new Date().toISOString().slice(0,7);
+  const cerradosMes=cerrados.filter(l=>(l.date||'').startsWith(thisMonth));
+  const totalMes=cerradosMes.reduce((a,l)=>a+Number(l.budget||0),0);
+  const comisionMes=Math.round(totalMes*(COMISION_PCT/100));
+  const totalAcum=cerrados.reduce((a,l)=>a+Number(l.budget||0),0);
+  const comisionAcum=Math.round(totalAcum*(COMISION_PCT/100));
+
+  return `
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Configuración</div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div>
+        <div class="form-label">% de comisión por venta</div>
+        <input class="form-input" type="number" id="comm-pct" value="${COMISION_PCT}" style="width:100px" onchange="window.COMISION_PCT_CUSTOM=Number(this.value);renderPage()"/>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">Se aplica sobre el presupuesto de cada venta cerrada</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
+    <div class="comm-card"><div class="comm-value">${cerradosMes.length}</div><div class="comm-label">Ventas este mes</div></div>
+    <div class="comm-card"><div class="comm-value">${fmtMXN(totalMes).replace(' MXN','')}</div><div class="comm-label">Facturado este mes</div></div>
+    <div class="comm-card" style="border-color:var(--accent)"><div class="comm-value">${fmtMXN(comisionMes).replace(' MXN','')}</div><div class="comm-label">Comisión este mes</div></div>
+    <div class="comm-card"><div class="comm-value">${fmtMXN(comisionAcum).replace(' MXN','')}</div><div class="comm-label">Comisión acumulada</div></div>
+  </div>
+  <div class="section-title" style="margin-bottom:14px">Detalle por venta cerrada</div>
+  <div class="table-wrap"><table><thead><tr><th>#</th><th>Cliente</th><th>Moto</th><th>Precio venta</th><th>% Comisión</th><th>Comisión</th><th>Fecha</th></tr></thead><tbody>
+    ${cerrados.length===0?`<tr><td colspan="7"><div class="empty">Sin ventas cerradas</div></td></tr>`:cerrados.map((l,i)=>{
+      const pct=window.COMISION_PCT_CUSTOM||COMISION_PCT;
+      const comm=Math.round(Number(l.budget||0)*(pct/100));
+      return `<tr>
+        <td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td>
+        <td style="font-weight:600">${esc(l.name)}</td>
+        <td>${esc(l.moto)}</td>
+        <td style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700">${fmtMXN(l.budget)}</td>
+        <td style="color:var(--muted)">${pct}%</td>
+        <td style="color:var(--success);font-family:'Barlow Condensed',sans-serif;font-weight:700">${fmtMXN(comm)}</td>
+        <td style="color:var(--muted)">${esc(l.date||'')}</td>
+      </tr>`;
+    }).join('')}
+  </tbody></table></div>`;
+}
+
+// ── WHATSAPP ──────────────────────────────────────────
+const WA_TEMPLATES = [
+  {name:'Primer contacto',stage:'Nuevo',msg:`Hola {nombre}! 👋 Te contacto de MotoCRM Agencia de Motos. Vi que te interesa la {moto}. ¿Cuándo te viene bien que platicemos? 🏍️`},
+  {name:'Seguimiento',stage:'Contactado',msg:`Hola {nombre}, quería darte seguimiento. ¿Sigues interesado/a en la {moto}? Tenemos disponibilidad esta semana. 🙌`},
+  {name:'Invitar a prueba',stage:'Interesado',msg:`{nombre}! Te invito a una prueba de manejo de la {moto}. Sin compromiso. ¿Qué día te queda bien? 🏁`},
+  {name:'Post prueba',stage:'Prueba',msg:`{nombre}, ¿qué te pareció la {moto}? Cuéntame. Podemos armar una cotización a tu medida si te gustó. 💪`},
+  {name:'Cotización lista',stage:'Interesado',msg:`Hola {nombre}! Tu cotización para la {moto} está lista. Mensualidades desde {mensualidad}. ¿La revisamos juntos? 📋`},
+  {name:'Recordatorio cita',stage:'Prueba',msg:`{nombre}, te recuerdo tu cita mañana para la {moto}. Nos vemos en la agencia. ¿Confirmas? ✅`},
+];
+function renderWhatsApp() {
+  const {leads}=STATE;
+  return `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div>
+      <div class="section-title" style="margin-bottom:14px">Enviar mensaje rápido</div>
+      <div class="form-row"><label class="form-label">Prospecto</label>
+        <select class="form-select" id="wa-lead" onchange="previewWA()">
+          <option value="">Seleccionar…</option>
+          ${leads.map(l=>`<option value="${l.id}">${esc(l.name)} — ${esc(l.moto)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-row"><label class="form-label">Plantilla</label>
+        <select class="form-select" id="wa-template" onchange="previewWA()">
+          ${WA_TEMPLATES.map((t,i)=>`<option value="${i}">${t.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-row"><label class="form-label">Mensaje (editable)</label>
+        <textarea class="form-textarea" id="wa-msg" style="min-height:100px"></textarea>
+      </div>
+      <button class="btn btn-success" style="width:100%" onclick="sendWAMessage()">📱 Abrir en WhatsApp</button>
+    </div>
+    <div>
+      <div class="section-title" style="margin-bottom:14px">Plantillas disponibles</div>
+      ${WA_TEMPLATES.map((t,i)=>`
+        <div class="template-card" onclick="document.getElementById('wa-template').value=${i};previewWA()">
+          <div class="template-name">${t.name} <span class="badge" style="background:${STAGE_COLOR[t.stage]||'#64748b'}22;color:${STAGE_COLOR[t.stage]||'#64748b'};border:1px solid ${STAGE_COLOR[t.stage]||'#64748b'}44;font-size:10px">${t.stage}</span></div>
+          <div class="template-preview">${t.msg.slice(0,80)}…</div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+function previewWA() {
+  const leadId=document.getElementById('wa-lead')?.value;
+  const tplIdx=document.getElementById('wa-template')?.value;
+  const lead=STATE.leads.find(l=>l.id===leadId);
+  if(!lead||tplIdx===undefined) return;
+  let msg=WA_TEMPLATES[tplIdx].msg;
+  const mens=STATE.quotes.find(q=>q.lead_name===lead.name);
+  const mensVal=mens?fmtMXN(Math.round(calcMens(mens.price,mens.enganche,mens.plazo,mens.tasa))):'consultar';
+  msg=msg.replace(/{nombre}/g,lead.name?.split(' ')[0]||'').replace(/{moto}/g,lead.moto||'').replace(/{mensualidad}/g,mensVal);
+  document.getElementById('wa-msg').value=msg;
+}
+function sendWAMessage() {
+  const leadId=document.getElementById('wa-lead')?.value;
+  const msg=document.getElementById('wa-msg')?.value;
+  const lead=STATE.leads.find(l=>l.id===leadId);
+  if(!lead||!msg){toast('Selecciona un prospecto y mensaje','danger');return;}
+  const phone=(lead.phone||'').replace(/\D/g,'');
+  window.open(`https://wa.me/52${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+function sendQuoteWhatsApp(quoteId) {
+  const q=STATE.quotes.find(q=>q.id===quoteId);
+  if(!q) return;
+  const mens=Math.round(calcMens(q.price,q.enganche,q.plazo,q.tasa));
+  const msg=`Hola ${q.lead_name}! Tu cotización para la ${q.moto} está lista 🏍️\n\nPrecio: ${fmtMXN(q.price)}\nEnganche: ${fmtMXN(q.enganche)}\nPago mensual: ${fmtMXN(mens)}\nPlazo: ${q.plazo} meses\n\n¿Te parece bien? Podemos cerrar esta semana. 💪`;
+  const lead=STATE.leads.find(l=>l.name===q.lead_name);
+  const phone=lead?(lead.phone||'').replace(/\D/g,''):'';
+  window.open(`https://wa.me/52${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+// ── USUARIOS ──────────────────────────────────────────
+async function loadUserRole() {
+  if(!STATE.user) return;
+  const {data}=await sb.from('user_roles').select('role').eq('user_id',STATE.user.id).single();
+  STATE_ROLE=data?.role||'vendedor';
+  const label=document.getElementById('user-role-label');
+  if(label) label.innerHTML=`<span class="role-badge role-${STATE_ROLE}">${STATE_ROLE}</span>`;
+  const navU=document.getElementById('nav-usuarios');
+  if(navU) navU.style.display=STATE_ROLE==='gerente'?'flex':'none';
+}
+async function loadUsers() {
+  const {data}=await sb.from('user_roles').select('*');
+  STATE_USERS=data||[];
+}
+async function ensureUserRole() {
+  if(!STATE.user) return;
+  const {data}=await sb.from('user_roles').select('id').eq('user_id',STATE.user.id).single();
+  if(!data) await sb.from('user_roles').insert([{user_id:STATE.user.id,role:'vendedor'}]);
+}
+function renderUsuarios() {
+  if(STATE_ROLE!=='gerente') return `<div class="empty" style="padding:60px"><div style="font-size:40px;margin-bottom:12px">⊙</div>Solo los gerentes pueden ver esta sección.</div>`;
+  if(!STATE_USERS.length) return `<div class="empty">Sin usuarios registrados aún.</div>`;
+  return `
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--muted)">
+    Los usuarios se registran desde la pantalla de login. Aquí puedes asignar roles.
+  </div>
+  <div class="users-grid">${STATE_USERS.map(u=>`
+    <div class="user-card">
+      <div class="user-card-avatar">${(u.user_id||'U').slice(0,2).toUpperCase()}</div>
+      <div class="user-card-name">${esc(u.user_id?.slice(0,12))}…</div>
+      <div class="user-card-email"><span class="role-badge role-${u.role}">${u.role}</span></div>
+      <div style="margin-top:10px">
+        <div class="form-label">Cambiar rol</div>
+        <select class="form-select" style="padding:4px 8px;font-size:12px" onchange="changeUserRole('${u.user_id}',this.value)">
+          <option${u.role==='vendedor'?' selected':''}>vendedor</option>
+          <option${u.role==='gerente'?' selected':''}>gerente</option>
+        </select>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+async function changeUserRole(userId,role) {
+  await sb.from('user_roles').upsert({user_id:userId,role},{onConflict:'user_id'});
+  await loadUsers(); renderPage(); toast('Rol actualizado');
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────
+async function loadNotifs() {
+  if(!STATE.user) return;
+  const {data}=await sb.from('notifications').select('*').eq('user_id',STATE.user.id).order('created_at',{ascending:false}).limit(30);
+  NOTIFS=data||[]; updateNotifBell();
+}
+function updateNotifBell() {
+  const dot=document.getElementById('notif-dot');
+  if(!dot) return;
+  const unread=NOTIFS.filter(n=>!n.read).length;
+  dot.classList.toggle('show',unread>0);
+}
+function toggleNotifPanel() {
+  notifOpen=!notifOpen;
+  const panel=document.getElementById('notif-panel');
+  if(!notifOpen){panel.classList.add('hidden');return;}
+  panel.classList.remove('hidden');
+  renderNotifPanel();
+}
+function renderNotifPanel() {
+  const panel=document.getElementById('notif-panel');
+  const unread=NOTIFS.filter(n=>!n.read).length;
+  let html=`<div class="notif-header"><div class="notif-title">Notificaciones</div><div style="display:flex;gap:6px">${unread>0?`<button class="btn btn-ghost btn-sm" onclick="markAllRead()">Leídas</button>`:''}<button class="btn btn-ghost btn-sm" onclick="toggleNotifPanel()">✕</button></div></div>`;
+  if(!NOTIFS.length) html+=`<div class="notif-empty">Sin notificaciones</div>`;
+  else html+=NOTIFS.map(n=>`<div class="notif-item${!n.read?' unread':''}" onclick="readNotif('${n.id}')"><div class="notif-item-title">${esc(n.title)}</div><div class="notif-item-body">${esc(n.body)}</div><div class="notif-item-time">${timeAgo(n.created_at)}</div></div>`).join('');
+  panel.innerHTML=html;
+}
+async function readNotif(id) {
+  await sb.from('notifications').update({read:true}).eq('id',id);
+  const n=NOTIFS.find(n=>n.id===id); if(n) n.read=true;
+  updateNotifBell(); renderNotifPanel();
+}
+async function markAllRead() {
+  await sb.from('notifications').update({read:true}).eq('user_id',STATE.user.id).eq('read',false);
+  NOTIFS.forEach(n=>n.read=true); updateNotifBell(); renderNotifPanel();
+}
+async function sendNotifToAll(title,body,type='info') {
+  const {data:roles}=await sb.from('user_roles').select('user_id');
+  if(!roles||!roles.length) return;
+  await sb.from('notifications').insert(roles.map(r=>({user_id:r.user_id,title,body,type,read:false})));
+}
+function subscribeNotifs() {
+  if(!STATE.user) return;
+  sb.channel('rt_notifs_user').on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:`user_id=eq.${STATE.user.id}`},async()=>{
+    await loadNotifs(); if(notifOpen) renderNotifPanel();
+  }).subscribe();
+}
+function timeAgo(ts) {
+  const diff=(Date.now()-new Date(ts))/1000;
+  if(diff<60) return 'Ahora';
+  if(diff<3600) return `Hace ${Math.floor(diff/60)} min`;
+  if(diff<86400) return `Hace ${Math.floor(diff/3600)} h`;
+  return `Hace ${Math.floor(diff/86400)} días`;
+}
+document.addEventListener('click',e=>{
+  if(notifOpen&&!e.target.closest('#notif-panel')&&!e.target.closest('#notif-bell')){
+    notifOpen=false; document.getElementById('notif-panel')?.classList.add('hidden');
+  }
+});
+
+// ── ACTIVITY LOG ──────────────────────────────────────
+async function logActivity(action, entity, detail) {
+  if(!STATE.user) return;
+  await sb.from('activity_log').insert([{user_id:STATE.user.id,action,entity,detail,created_at:new Date().toISOString()}]);
+}
+
+// ── LEAD DETAIL ───────────────────────────────────────
 function openLeadDetail(id) {
-  const l = STATE.leads.find(l=>l.id===id);
+  const l=STATE.leads.find(l=>l.id===id);
   if(!l) return;
-  const html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
-    <div class="modal">
+  const leadActivity=STATE.activity.filter(a=>a.detail?.includes(l.name));
+  const days=daysSince(l.updated_at||l.date||l.created_at);
+  const stale=days>3&&l.status!=='Cerrado';
+  const html=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal modal-lg">
       <div class="modal-title">${esc(l.name)}</div>
       <div class="form-grid" style="margin-bottom:14px">
         ${[['Teléfono',l.phone],['Moto',l.moto],['Presupuesto',fmtMXN(l.budget)],['Fecha',l.date||'']].map(([lb,v])=>`<div><div class="form-label">${lb}</div><div style="font-weight:600">${esc(v)}</div></div>`).join('')}
       </div>
-      <div style="margin-bottom:14px"><div class="form-label">Notas</div><div style="font-size:13px;color:var(--muted);background:var(--surface2);padding:9px 11px;border-radius:4px">${esc(l.notes||'Sin notas')}</div></div>
+      ${stale?`<div style="background:#f59e0b18;border:1px solid #f59e0b44;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#f59e0b">⏰ Sin actividad hace ${days} días</div>`:''}
+      <div style="margin-bottom:14px"><div class="form-label">Notas</div>
+        <div style="font-size:13px;color:var(--muted);background:var(--surface2);padding:9px 11px;border-radius:4px">${esc(l.notes||'Sin notas')}</div>
+      </div>
       <div class="form-row"><label class="form-label">Cambiar etapa</label>
         <select class="form-select" onchange="updateLeadStatus('${l.id}',this.value)">
           ${STAGES.map(s=>`<option${l.status===s?' selected':''}>${s}</option>`).join('')}
         </select>
       </div>
-      <div style="margin-top:8px">${stageBadge(l.status)}</div>
+      <div style="margin-top:8px;margin-bottom:14px">${stageBadge(l.status)}</div>
+      <hr class="divider"/>
+      <div class="form-label" style="margin-bottom:8px">Historial de actividad</div>
+      <div class="activity-log">
+        ${leadActivity.length===0?`<div style="font-size:12px;color:var(--muted)">Sin actividad registrada</div>`:leadActivity.slice(0,6).map(a=>`<div class="activity-log-item"><div class="activity-log-text">${esc(a.action)} — ${esc(a.detail)}</div><div class="activity-log-time">${timeAgo(a.created_at)}</div></div>`).join('')}
+      </div>
       <div class="modal-actions">
         <button class="btn btn-danger" onclick="deleteLead('${l.id}')">Eliminar</button>
+        ${l.status!=='Cerrado'?`<button class="btn btn-success" onclick="convertToClient('${l.id}')">✓ Convertir a Cliente</button>`:''}
+        <a href="https://wa.me/52${(l.phone||'').replace(/\D/g,'')}" target="_blank" class="btn btn-wa">📱 WhatsApp</a>
         <button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>
       </div>
     </div>
   </div>`;
-  document.getElementById('modal-root').innerHTML = html;
+  document.getElementById('modal-root').innerHTML=html;
 }
 
-// ── MODAL OPEN ────────────────────────────────────────────────────────────────
+async function convertToClient(leadId) {
+  const l=STATE.leads.find(l=>l.id===leadId);
+  if(!l) return;
+  if(!confirm(`¿Convertir a ${l.name} en cliente? Esto marcará el prospecto como Cerrado.`)) return;
+  // Insert to clients
+  const {error}=await sb.from('clients').insert([{name:l.name,phone:l.phone,email:l.email||'',moto:l.moto,date:today(),total:Number(l.budget||0)}]);
+  if(error){toast('Error: '+error.message,'danger');return;}
+  // Update lead status
+  await sb.from('leads').update({status:'Cerrado'}).eq('id',leadId);
+  await logActivity('Convertido a cliente',l.name,`${l.name} — ${l.moto}`);
+  await sendNotifToAll('🎉 Nueva venta cerrada',`${l.name} fue convertido a cliente. Moto: ${l.moto}. ${fmtMXN(l.budget)}`,'success');
+  closeModal(); toast('✓ Convertido a cliente exitosamente');
+  await loadAll(); renderPage();
+}
+
+// ── MODALS ────────────────────────────────────────────
 function openModal(type) {
-  const leadOptions = STATE.leads.map(l=>`<option>${esc(l.name)}</option>`).join('');
-  const motoOptions = STATE.inventory.map(m=>`<option value="${esc(m.brand+' '+m.model)}" data-price="${m.price}">${esc(m.brand)} ${esc(m.model)}</option>`).join('');
-  let html = '';
-  if (type==='lead') {
-    html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+  const leadOpts=STATE.leads.map(l=>`<option>${esc(l.name)}</option>`).join('');
+  const motoOpts=STATE.inventory.map(m=>`<option value="${esc(m.brand+' '+m.model)}" data-price="${m.price}">${esc(m.brand)} ${esc(m.model)}</option>`).join('');
+  let html='';
+  if(type==='lead'){
+    html=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
       <div class="modal-title">Nuevo Prospecto</div>
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Nombre</label><input class="form-input" id="f-name" placeholder="Carlos Mendoza"/></div>
@@ -654,8 +1180,8 @@ function openModal(type) {
       <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveLead()">Guardar</button></div>
     </div></div>`;
   }
-  if (type==='moto') {
-    html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+  if(type==='moto'){
+    html=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal modal-lg">
       <div class="modal-title">Agregar Moto</div>
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Marca</label><input class="form-input" id="f-brand" placeholder="Honda"/></div>
@@ -664,18 +1190,22 @@ function openModal(type) {
         <div class="form-row"><label class="form-label">Precio MXN</label><input class="form-input" id="f-price" type="number" placeholder="85000"/></div>
         <div class="form-row"><label class="form-label">Color</label><input class="form-input" id="f-color" placeholder="Rojo"/></div>
         <div class="form-row"><label class="form-label">Kilómetros</label><input class="form-input" id="f-km" type="number" value="0"/></div>
+        <div class="form-row"><label class="form-label">Cilindraje (cc)</label><input class="form-input" id="f-cil" placeholder="500"/></div>
+        <div class="form-row"><label class="form-label">Tipo</label><select class="form-select" id="f-tipo"><option>Naked</option><option>Sport</option><option>Adventure</option><option>Cruiser</option><option>Scooter</option><option>Enduro</option></select></div>
       </div>
+      <div class="form-row"><label class="form-label">URL de foto (opcional)</label><input class="form-input" id="f-photo" placeholder="https://…"/></div>
+      <div class="form-row"><label class="form-label">Descripción</label><textarea class="form-textarea" id="f-desc" placeholder="Características destacadas…"></textarea></div>
       <div class="form-row"><label class="form-label">Estado</label><select class="form-select" id="f-inv-status">${['Disponible','Apartada','Vendida'].map(s=>`<option>${s}</option>`).join('')}</select></div>
       <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveMoto()">Guardar</button></div>
     </div></div>`;
   }
-  if (type==='quote') {
-    html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal modal-lg">
+  if(type==='quote'){
+    html=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal modal-lg">
       <div class="modal-title">Nueva Cotización</div>
       <div class="form-grid">
-        <div class="form-row"><label class="form-label">Cliente</label><select class="form-select" id="f-qlead"><option value="">Seleccionar…</option>${leadOptions}</select></div>
-        <div class="form-row"><label class="form-label">Moto</label><select class="form-select" id="f-qmoto" onchange="autoFillPrice(this)">${'<option value="">Seleccionar…</option>'+motoOptions}</select></div>
-        <div class="form-row"><label class="form-label">Precio MXN</label><input class="form-input" id="f-qprice" type="number"/></div>
+        <div class="form-row"><label class="form-label">Cliente</label><select class="form-select" id="f-qlead"><option value="">Seleccionar…</option>${leadOpts}</select></div>
+        <div class="form-row"><label class="form-label">Moto</label><select class="form-select" id="f-qmoto" onchange="autoFillPrice(this)"><option value="">Seleccionar…</option>${motoOpts}</select></div>
+        <div class="form-row"><label class="form-label">Precio MXN</label><input class="form-input" id="f-qprice" type="number" oninput="previewMens()"/></div>
         <div class="form-row"><label class="form-label">Enganche MXN</label><input class="form-input" id="f-qenganche" type="number" placeholder="20000" oninput="previewMens()"/></div>
         <div class="form-row"><label class="form-label">Plazo</label><select class="form-select" id="f-qplazo" onchange="previewMens()">${[12,18,24,36,48].map(p=>`<option${p===24?' selected':''}>${p}</option>`).join('')}</select></div>
         <div class="form-row"><label class="form-label">Tasa Anual %</label><input class="form-input" id="f-qtasa" type="number" value="18" oninput="previewMens()"/></div>
@@ -684,29 +1214,25 @@ function openModal(type) {
       <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveQuote()">Guardar</button></div>
     </div></div>`;
   }
-  if (type==='appt') {
-    html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+  if(type==='appt'){
+    html=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
       <div class="modal-title">Agendar Cita</div>
-      <div class="form-row"><label class="form-label">Cliente</label><select class="form-select" id="f-alead"><option value="">Seleccionar…</option>${leadOptions}</select></div>
+      <div class="form-row"><label class="form-label">Cliente</label><select class="form-select" id="f-alead"><option value="">Seleccionar…</option>${leadOpts}</select></div>
       <div class="form-row"><label class="form-label">Tipo</label><select class="form-select" id="f-atype">${['Prueba de manejo','Visita agencia','Entrega de moto','Seguimiento','Otro'].map(t=>`<option>${t}</option>`).join('')}</select></div>
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Fecha</label><input class="form-input" id="f-adate" type="date"/></div>
         <div class="form-row"><label class="form-label">Hora</label><input class="form-input" id="f-atime" type="time" value="10:00"/></div>
       </div>
-      <div class="form-row"><label class="form-label">Moto (opcional)</label><select class="form-select" id="f-amoto"><option value="">—</option>${motoOptions}</select></div>
-      <div class="form-row"><label class="form-label">Notas</label><textarea class="form-textarea" id="f-anotes" placeholder="Instrucciones…"></textarea></div>
+      <div class="form-row"><label class="form-label">Moto (opcional)</label><select class="form-select" id="f-amoto"><option value="">—</option>${motoOpts}</select></div>
+      <div class="form-row"><label class="form-label">Notas</label><textarea class="form-textarea" id="f-anotes"></textarea></div>
       <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveAppt()">Agendar</button></div>
     </div></div>`;
   }
-  document.getElementById('modal-root').innerHTML = html;
+  document.getElementById('modal-root').innerHTML=html;
 }
-function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
-function autoFillPrice(sel) {
-  const opt = sel.options[sel.selectedIndex];
-  const p = opt.dataset.price;
-  if(p) { document.getElementById('f-qprice').value=p; previewMens(); }
-}
-function previewMens() {
+function closeModal(){document.getElementById('modal-root').innerHTML='';}
+function autoFillPrice(sel){const opt=sel.options[sel.selectedIndex];if(opt.dataset.price){document.getElementById('f-qprice').value=opt.dataset.price;previewMens();}}
+function previewMens(){
   const p=Number(document.getElementById('f-qprice')?.value||0);
   const e=Number(document.getElementById('f-qenganche')?.value||0);
   const pl=Number(document.getElementById('f-qplazo')?.value||24);
@@ -716,84 +1242,152 @@ function previewMens() {
   document.getElementById('mens-preview').innerHTML=`<div class="quote-result"><div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Pago Mensual Estimado</div><div class="quote-big">${fmtMXN(Math.round(mens))}</div><div class="quote-detail">${pl} meses · Financiando ${fmtMXN(p-e)}</div></div>`;
 }
 
-// ── SAVE OPERATIONS ───────────────────────────────────────────────────────────
+// ── CRUD ──────────────────────────────────────────────
 async function saveLead() {
-  const name=document.getElementById('f-name').value.trim();
-  const phone=document.getElementById('f-phone').value.trim();
-  const moto=document.getElementById('f-moto').value.trim();
-  const budget=document.getElementById('f-budget').value;
-  const status=document.getElementById('f-status').value;
-  const notes=document.getElementById('f-notes').value.trim();
-  if(!name||!phone||!moto||!budget){toast("Completa todos los campos","danger");return;}
-  const {error} = await sb.from("leads").insert([{name,phone,moto,budget:Number(budget),status,notes,date:today()}]);
-  if(error){toast("Error: "+error.message,"danger");console.error(error);return;}
+  const name=document.getElementById('f-name')?.value?.trim();
+  const phone=document.getElementById('f-phone')?.value?.trim();
+  const moto=document.getElementById('f-moto')?.value?.trim();
+  const budget=document.getElementById('f-budget')?.value;
+  const status=document.getElementById('f-status')?.value;
+  const notes=document.getElementById('f-notes')?.value?.trim();
+  if(!name||!phone||!moto||!budget){toast('Completa todos los campos','danger');return;}
+  const {error}=await sb.from('leads').insert([{name,phone,moto,budget:Number(budget),status,notes,date:today()}]);
+  if(error){toast('Error: '+error.message,'danger');console.error(error);return;}
+  await logActivity('Nuevo prospecto',name,`${name} — ${moto} — ${fmtMXN(budget)}`);
+  await sendNotifToAll('🏍️ Nuevo prospecto',`${name} interesado en ${moto}. Presupuesto: ${fmtMXN(budget)}`,'info');
   closeModal(); toast('Prospecto agregado');
   await loadAll(); renderPage();
 }
 async function saveMoto() {
-  const brand=document.getElementById('f-brand').value.trim();
-  const model=document.getElementById('f-model').value.trim();
-  const year=document.getElementById('f-year').value;
-  const price=document.getElementById('f-price').value;
-  const color=document.getElementById('f-color').value.trim();
-  const km=document.getElementById('f-km').value;
-  const status=document.getElementById('f-inv-status').value;
+  const brand=document.getElementById('f-brand')?.value?.trim();
+  const model=document.getElementById('f-model')?.value?.trim();
+  const year=document.getElementById('f-year')?.value;
+  const price=document.getElementById('f-price')?.value;
+  const color=document.getElementById('f-color')?.value?.trim();
+  const km=document.getElementById('f-km')?.value;
+  const status=document.getElementById('f-inv-status')?.value;
+  const cilindraje=document.getElementById('f-cil')?.value?.trim();
+  const tipo=document.getElementById('f-tipo')?.value;
+  const photo_url=document.getElementById('f-photo')?.value?.trim();
+  const descripcion=document.getElementById('f-desc')?.value?.trim();
   if(!brand||!model||!price){toast('Completa los campos requeridos','danger');return;}
-  const {error}=await sb.from('inventory').insert([{brand,model,year:Number(year),price:Number(price),color,km:Number(km),status}]);
-  if(error){toast('Error al guardar','danger');return;}
+  const {error}=await sb.from('inventory').insert([{brand,model,year:Number(year),price:Number(price),color,km:Number(km),status,cilindraje,tipo,photo_url,descripcion}]);
+  if(error){toast('Error: '+error.message,'danger');return;}
+  await logActivity('Moto agregada',`${brand} ${model}`,`${brand} ${model} ${year} — ${fmtMXN(price)}`);
   closeModal(); toast('Moto agregada');
   await loadAll(); renderPage();
 }
 async function saveQuote() {
-  const lead_name=document.getElementById('f-qlead').value;
-  const moto=document.getElementById('f-qmoto').value;
-  const price=document.getElementById('f-qprice').value;
-  const enganche=document.getElementById('f-qenganche').value;
-  const plazo=document.getElementById('f-qplazo').value;
-  const tasa=document.getElementById('f-qtasa').value;
+  const lead_name=document.getElementById('f-qlead')?.value;
+  const moto=document.getElementById('f-qmoto')?.value;
+  const price=document.getElementById('f-qprice')?.value;
+  const enganche=document.getElementById('f-qenganche')?.value;
+  const plazo=document.getElementById('f-qplazo')?.value;
+  const tasa=document.getElementById('f-qtasa')?.value;
   if(!lead_name||!moto||!price||!enganche){toast('Completa los campos requeridos','danger');return;}
   const {error}=await sb.from('quotes').insert([{lead_name,moto,price:Number(price),enganche:Number(enganche),plazo:Number(plazo),tasa:Number(tasa),status:'Borrador',date:today()}]);
-  if(error){toast('Error al guardar','danger');return;}
+  if(error){toast('Error: '+error.message,'danger');return;}
+  await logActivity('Cotización creada',lead_name,`${lead_name} — ${moto}`);
   closeModal(); toast('Cotización creada');
   await loadAll(); renderPage();
 }
 async function saveAppt() {
-  const lead_name=document.getElementById('f-alead').value;
-  const type=document.getElementById('f-atype').value;
-  const date=document.getElementById('f-adate').value;
-  const time=document.getElementById('f-atime').value;
-  const moto=document.getElementById('f-amoto').value;
-  const notes=document.getElementById('f-anotes').value.trim();
+  const lead_name=document.getElementById('f-alead')?.value;
+  const type=document.getElementById('f-atype')?.value;
+  const date=document.getElementById('f-adate')?.value;
+  const time=document.getElementById('f-atime')?.value;
+  const moto=document.getElementById('f-amoto')?.value;
+  const notes=document.getElementById('f-anotes')?.value?.trim();
   if(!lead_name||!date||!time){toast('Completa los campos requeridos','danger');return;}
   const {error}=await sb.from('appointments').insert([{lead_name,type,date,time,moto,notes,status:'Pendiente'}]);
-  if(error){toast('Error al guardar','danger');return;}
+  if(error){toast('Error: '+error.message,'danger');return;}
+  await logActivity('Cita agendada',lead_name,`${type} — ${lead_name} — ${date} ${time}`);
   closeModal(); toast('Cita agendada');
   await loadAll(); renderPage();
 }
+async function updateLeadStatus(id,status) {
+  await sb.from('leads').update({status,updated_at:new Date().toISOString()}).eq('id',id);
+  const l=STATE.leads.find(l=>l.id===id);
+  if(l){await logActivity(`Etapa → ${status}`,l.name,`${l.name} movido a ${status}`);}
+  toast('Etapa actualizada');
+  await loadAll();
+}
+async function updateMotoStatus(id,status) {
+  await sb.from('inventory').update({status}).eq('id',id);
+  toast('Estado actualizado');
+  await loadAll(); renderPage();
+}
+async function updateQuoteStatus(id,status) {
+  await sb.from('quotes').update({status}).eq('id',id);
+  const q=STATE.quotes.find(q=>q.id===id); if(q) q.status=status;
+  renderPage();
+}
+async function updateApptStatus(id,status) {
+  await sb.from('appointments').update({status}).eq('id',id);
+  toast('Estado actualizado');
+  await loadAll(); renderPage();
+}
+async function deleteLead(id) {
+  if(!confirm('¿Eliminar este prospecto?')) return;
+  await sb.from('leads').delete().eq('id',id);
+  closeModal(); toast('Eliminado','danger');
+  await loadAll(); renderPage();
+}
 
-// ── EXCEL EXPORT ──────────────────────────────────────────────────────────────
-function exportExcel(type) {
-  const wb = XLSX.utils.book_new();
-  const all = {leads:STATE.leads,inventory:STATE.inventory,clients:STATE.clients,quotes:STATE.quotes,appts:STATE.appts};
-  const names = {leads:'Prospectos',inventory:'Inventario',clients:'Clientes',quotes:'Cotizaciones',appts:'Agenda'};
-  const targets = type==='all' ? Object.keys(all) : [type];
-  targets.forEach(k=>{
-    const ws=XLSX.utils.json_to_sheet(all[k]);
-    XLSX.utils.book_append_sheet(wb,ws,names[k]);
+// ── PDF ───────────────────────────────────────────────
+function generatePDF(quoteId) {
+  const q=STATE.quotes.find(q=>q.id===quoteId);
+  if(!q) return;
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const mens=Math.round(calcMens(q.price,q.enganche,q.plazo,q.tasa));
+  const total=Math.round(q.enganche+mens*q.plazo);
+  const intereses=total-q.price;
+  doc.setFillColor(15,14,11); doc.rect(0,0,210,40,'F');
+  doc.setTextColor(245,197,24); doc.setFontSize(28); doc.setFont('helvetica','bold'); doc.text('MOTOCRM',14,20);
+  doc.setFontSize(9); doc.setTextColor(180,170,150); doc.setFont('helvetica','normal'); doc.text('COTIZACIÓN FORMAL',14,28);
+  doc.text(`Fecha: ${q.date||today()}`,140,18); doc.text(`Folio: COT-${String(q.id).slice(0,8).toUpperCase()}`,140,24);
+  doc.setTextColor(30,30,30); doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.text('CLIENTE',14,52);
+  doc.setDrawColor(245,197,24); doc.setLineWidth(0.5); doc.line(14,54,80,54);
+  doc.setFont('helvetica','normal'); doc.setFontSize(12); doc.setTextColor(20,20,20); doc.text(q.lead_name||'—',14,62);
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(30,30,30); doc.text('VEHÍCULO',14,76);
+  doc.line(14,78,80,78); doc.setFont('helvetica','normal'); doc.setFontSize(13); doc.setTextColor(20,20,20); doc.text(q.moto||'—',14,86);
+  doc.setFillColor(245,197,24); doc.roundedRect(120,48,76,44,3,3,'F');
+  doc.setTextColor(15,14,11); doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.text('PAGO MENSUAL',158,58,{align:'center'});
+  doc.setFontSize(22); doc.text(`$${mens.toLocaleString('es-MX')}`,158,72,{align:'center'});
+  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.text(`MXN / ${q.plazo} meses`,158,80,{align:'center'});
+  const tableY=100;
+  const rows=[['Precio de la moto',`$${Number(q.price).toLocaleString('es-MX')} MXN`],['Enganche',`$${Number(q.enganche).toLocaleString('es-MX')} MXN`],['Monto a financiar',`$${(q.price-q.enganche).toLocaleString('es-MX')} MXN`],['Plazo',`${q.plazo} meses`],['Tasa anual',`${q.tasa}%`],['Pago mensual',`$${mens.toLocaleString('es-MX')} MXN`],['Total a pagar',`$${total.toLocaleString('es-MX')} MXN`],['Intereses totales',`$${intereses.toLocaleString('es-MX')} MXN`]];
+  doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(30,30,30); doc.text('DESGLOSE FINANCIERO',14,tableY);
+  doc.line(14,tableY+2,100,tableY+2);
+  rows.forEach(([label,value],i)=>{
+    const y=tableY+12+i*10;
+    if(i%2===0){doc.setFillColor(245,243,238);doc.rect(12,y-6,186,10,'F');}
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(80,80,80); doc.text(label,16,y);
+    doc.setFont('helvetica','bold'); doc.setTextColor(20,20,20); doc.text(value,194,y,{align:'right'});
   });
-  XLSX.writeFile(wb, type==='all'?'MotoCRM_Completo.xlsx':`MotoCRM_${names[type]}.xlsx`);
+  doc.setFillColor(15,14,11); doc.rect(0,270,210,30,'F');
+  doc.setTextColor(245,197,24); doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.text('MotoCRM — Sistema de Ventas',14,280);
+  doc.setFont('helvetica','normal'); doc.setTextColor(180,170,150); doc.setFontSize(8);
+  doc.text('Esta cotización es informativa. Los valores pueden variar según condiciones de financiamiento vigentes.',14,288);
+  doc.save(`Cotizacion_${(q.lead_name||'cliente').replace(/\s/g,'_')}.pdf`);
+  toast('PDF generado');
+}
+
+// ── EXCEL ─────────────────────────────────────────────
+function exportExcel(type) {
+  const wb=XLSX.utils.book_new();
+  const all={leads:STATE.leads,inventory:STATE.inventory,clients:STATE.clients,quotes:STATE.quotes,appts:STATE.appts};
+  const names={leads:'Prospectos',inventory:'Inventario',clients:'Clientes',quotes:'Cotizaciones',appts:'Agenda'};
+  const targets=type==='all'?Object.keys(all):[type];
+  targets.forEach(k=>{const ws=XLSX.utils.json_to_sheet(all[k]);XLSX.utils.book_append_sheet(wb,ws,names[k]);});
+  XLSX.writeFile(wb,type==='all'?'MotoCRM_Completo.xlsx':`MotoCRM_${names[type]}.xlsx`);
   toast('Excel exportado');
 }
 
-// ── BADGE HELPERS ─────────────────────────────────────────────────────────────
-function stageBadge(s) {
-  const c=STAGE_COLOR[s]||'#64748b';
-  return `<span class="badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${esc(s)}</span>`;
-}
-function quoteBadge(s) {
-  const c=QUOTE_COLOR[s]||'#64748b';
-  return `<span class="badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${esc(s)}</span>`;
-}
+// ── BADGES ────────────────────────────────────────────
+function stageBadge(s){const c=STAGE_COLOR[s]||'#64748b';return `<span class="badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${esc(s)}</span>`;}
+function quoteBadge(s){const c=QUOTE_COLOR[s]||'#64748b';return `<span class="badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${esc(s)}</span>`;}
 </script>
 </body>
 </html>
