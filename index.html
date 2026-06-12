@@ -424,7 +424,7 @@ async function authSubmit() {
 async function logout() { await sb.auth.signOut(); }
 
 // ── SESSION ───────────────────────────────────────────
-sb.auth.onAuthStateChange(async(_e,session)=>{
+async function initSession(session) {
   if(session){
     STATE.user=session.user;
     const name=session.user.user_metadata?.full_name||session.user.email||'Usuario';
@@ -444,7 +444,13 @@ sb.auth.onAuthStateChange(async(_e,session)=>{
     document.getElementById('auth-screen').classList.remove('hidden');
     document.getElementById('app').classList.add('hidden');
   }
-});
+}
+
+// Check existing session on page load (fixes reload issue)
+sb.auth.getSession().then(({data:{session}})=>{ if(session) initSession(session); });
+
+// Listen for auth changes
+sb.auth.onAuthStateChange(async(_e,session)=>{ initSession(session); });
 
 // ── LOAD DATA ─────────────────────────────────────────
 async function loadAll() {
