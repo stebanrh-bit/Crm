@@ -604,7 +604,7 @@ function renderPipeline() {
     return `<div class="pipeline-col">
       <div class="pipeline-col-header" style="border-bottom-color:${STAGE_COLOR[st]};color:${STAGE_COLOR[st]}">${st}<span class="pipeline-total">${sl.length} leads · ${fmtMXN(tot)}</span></div>
       ${sl.length===0?`<div style="color:var(--muted);font-size:12px;text-align:center;margin-top:20px">Sin leads</div>`:sl.map(l=>{
-        const days=daysSince(l.date||l.created_at);
+        const days=daysSince(l.updated_at||l.date||l.created_at);
         const stale=days>3&&st!=='Cerrado';
         return `<div class="lead-card" onclick="openLeadDetail('${l.id}')">
           <div class="lead-card-name">${esc(l.name)}</div>
@@ -621,7 +621,7 @@ function renderPipeline() {
 function renderLeads() {
   const leads=STATE.leads.filter(l=>l.name?.toLowerCase().includes(STATE.search.toLowerCase())||l.moto?.toLowerCase().includes(STATE.search.toLowerCase()));
   return `<div class="table-wrap"><table><thead><tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Moto</th><th>Presupuesto</th><th>Estado</th><th>Días</th><th></th></tr></thead><tbody>${leads.length===0?`<tr><td colspan="8"><div class="empty">Sin prospectos. ¡Agrega el primero!</div></td></tr>`:leads.map((l,i)=>{
-    const days=daysSince(l.date||l.created_at);
+    const days=daysSince(l.updated_at||l.date||l.created_at);
     const stale=days>3&&l.status!=='Cerrado';
     return `<tr onclick="openLeadDetail('${l.id}')">
       <td style="color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700">${String(i+1).padStart(2,'0')}</td>
@@ -1118,7 +1118,7 @@ function openLeadDetail(id) {
   const l=STATE.leads.find(l=>l.id===id);
   if(!l) return;
   const leadActivity=STATE.activity.filter(a=>a.detail?.includes(l.name));
-  const days=daysSince(l.date||l.created_at);
+  const days=daysSince(l.updated_at||l.date||l.created_at);
   const stale=days>3&&l.status!=='Cerrado';
   const html=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
     <div class="modal modal-lg">
@@ -1312,7 +1312,7 @@ async function saveAppt() {
   await loadAll(); renderPage();
 }
 async function updateLeadStatus(id,status) {
-  await sb.from("leads").update({status}).eq("id",id);
+  await sb.from("leads").update({status, updated_at: new Date().toISOString()}).eq("id",id);
   const l=STATE.leads.find(l=>l.id===id);
   if(l){await logActivity(`Etapa → ${status}`,l.name,`${l.name} movido a ${status}`);}
   toast('Etapa actualizada');
